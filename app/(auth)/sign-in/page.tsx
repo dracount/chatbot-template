@@ -19,15 +19,10 @@ export default function SignIn() {
 
   const searchParams = useSearchParams();
 
-  // --- NEW, MORE DETAILED DEBUGGING BLOCK ---
-  console.log("--- Supabase Env Variable Check ---");
-  console.log("NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
   // Now, let's try to create the client
   const supabase = createClient();
   // ------------------------------------------
-  
+
   // --- NEW FUNCTION TO HANDLE GOOGLE SIGN IN ---
   const handleSignInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
