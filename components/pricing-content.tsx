@@ -35,9 +35,11 @@ export default function PricingContent({ products }: PricingContentProps) {
   const freeProduct = products.find((p) => p.id === 'plan_free');
   const paidProduct = products.find((p) => p.id === 'plan_paid');
 
+  // +++ CHANGE IS HERE +++
   // Construct the dynamic PayPal link with the user's ID
   // The 'custom_id' is how we'll identify the user in the webhook!
-  const paymentLink = `https://www.sandbox.paypal.com/ncp/payment/K5TZYYUSFX672`;
+  const basePaymentLink = `https://www.sandbox.paypal.com/ncp/payment/K5TZYYUSFX672`;
+  const paymentLink = userId ? `${basePaymentLink}?custom_id=${userId}` : '#';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start justify-center max-w-4xl mx-auto">
@@ -65,7 +67,8 @@ export default function PricingContent({ products }: PricingContentProps) {
           <div className="mt-auto min-h-[50px]">
             {/* The simple payment button */}
             <a
-              href={userId ? paymentLink : '#'}
+              // +++ AND HERE +++
+              href={paymentLink}
               target="_blank" // Opens PayPal in a new tab
               rel="noopener noreferrer"
               className={`w-full text-center block py-3 rounded-md font-semibold text-white transition-colors ${
