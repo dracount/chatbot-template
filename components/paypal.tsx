@@ -2,8 +2,7 @@
 
 import React, { useEffect } from 'react';
 
-// --- FIX 1: Define a specific type for the PayPal object ---
-// Instead of `any`, we describe the exact functions we plan to use.
+// Define a specific type for the PayPal object to satisfy the linter.
 interface PayPalHostedButtons {
   render: (selector: string) => Promise<void>;
 }
@@ -24,16 +23,18 @@ const PayPalButton = () => {
     if (window.paypal) {
       window.paypal.HostedButtons({
         hostedButtonId: "22GTVFW6WHDR6",
-      }).render("#paypal-container-22GTVFWHDR6")
-      // --- FIX 2: Type the error in the catch block as `unknown` ---
-      // This is the modern, safe way to handle errors in TypeScript.
+      })
+      // Correct ID with the "W"
+      .render("#paypal-container-22GTVFW6WHDR6") 
+      // Type the error as `unknown` which is the modern, safe way.
       .catch((err: unknown) => {
         console.error("PayPal button failed to render.", err);
       });
     }
   }, []);
 
-  return <div id="paypal-container-22GTVFWHDR6" />;
+  // Correct ID with the "W"
+  return <div id="paypal-container-22GTVFW6WHDR6" />; 
 };
 
 export default PayPalButton;
