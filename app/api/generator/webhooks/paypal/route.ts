@@ -1,4 +1,4 @@
-// app/api/webhooks/paypal/route.ts
+// app/api/generator/webhooks/paypal/route.ts
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -32,8 +32,9 @@ export async function POST(request: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
-      // Update the user's plan in the 'profiles' table
-      const { data, error } = await supabaseAdmin
+      // --- THE FIX IS HERE ---
+      // We removed `data` from the line below because it wasn't being used.
+      const { error } = await supabaseAdmin
         .from('profiles')
         .update({ plan: 'illuminate' })
         .eq('id', customId);
