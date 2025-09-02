@@ -37,7 +37,7 @@ export default function PricingContent({ products }: PricingContentProps) {
 
   // Construct the dynamic PayPal link with the user's ID
   // The 'custom_id' is how we'll identify the user in the webhook!
-  const paymentLink = `https://www.paypal.com/ncp/links/22GTVFW6WHDR6?custom_id=${userId}`;
+  const paymentLink = `https://www.sandbox.paypal.com/ncp/payment/K5TZYYUSFX672`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start justify-center max-w-4xl mx-auto">
