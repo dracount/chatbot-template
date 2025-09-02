@@ -22,7 +22,7 @@ const PayPalButton = () => {
   useEffect(() => {
     if (window.paypal) {
       window.paypal.HostedButtons({
-        hostedButtonId: "22GTVFW6WHDR6",
+        hostedButtonId: "K5TZYYUSFX672",
       })
       // Correct ID with the "W"
       .render("#paypal-container-22GTVFW6WHDR6") 
