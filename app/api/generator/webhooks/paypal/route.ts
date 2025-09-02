@@ -1,29 +1,56 @@
-import { NextResponse } from 'next/server';
+// app/api/webhooks/paypal/route.ts
 
-// This function will handle all POST requests sent to this API route.
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// WARNING: This is a simplified example.
+// In a real-world application, you MUST verify the webhook signature.
+// See PayPal's documentation on webhook verification.
+
 export async function POST(request: Request) {
   try {
-    // 1. Parse the incoming request body as JSON.
-    const webhookEvent = await request.json();
+    const event = await request.json();
 
-    // 2. Log the entire event object to your Vercel logs.
-    // This is the most important part for testing.
+    // Log the event for debugging
     console.log('--- PayPal Webhook Received ---');
-    console.log(JSON.stringify(webhookEvent, null, 2));
-    console.log('-----------------------------');
+    console.log(JSON.stringify(event, null, 2));
 
-    // In a real application, you would add logic here to verify the webhook
-    // and then update your database. For now, we just log it.
+    // Check if it's the event we care about
+    if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
+      const customId = event.resource?.purchase_units[0]?.custom_id;
+
+      if (!customId) {
+        console.error('Webhook Error: No custom_id (User ID) found in payload.');
+        return NextResponse.json({ error: 'User ID missing' }, { status: 400 });
+      }
+
+      console.log(`Payment approved for User ID: ${customId}`);
+
+      // Create a Supabase admin client to update the user's profile
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      // Update the user's plan in the 'profiles' table
+      const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .update({ plan: 'illuminate' })
+        .eq('id', customId);
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        // We still return a 200 OK so PayPal doesn't retry,
+        // but we log the error for manual follow-up.
+      } else {
+        console.log(`Successfully updated plan for user ${customId} to 'illuminate'.`);
+      }
+    }
+
+    return NextResponse.json({ status: 'success' }, { status: 200 });
 
   } catch (error) {
-    // If anything goes wrong, log the error.
     console.error('Error processing PayPal webhook:', error);
-    // Respond with an error status to let PayPal know something went wrong.
-    return NextResponse.json({ error: 'Webhook processing failed.' }, { status: 500 });
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
-
-  // 3. Respond to PayPal with a 200 OK status.
-  // This is crucial. If you don't respond, PayPal will think your
-  // webhook is broken and will keep trying to send the same message.
-  return NextResponse.json({ status: 'success' }, { status: 200 });
 }
