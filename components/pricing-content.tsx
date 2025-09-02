@@ -23,7 +23,7 @@ export default function PricingContent({ products }: PricingContentProps) {
     <>
       {/* This script loads the PayPal SDK needed for the button to work */}
       <Script
-        src="https://www.paypal.com/sdk/js?client-id=BAAhNoNmo41pCpPSQbMUq2VffowvrgT7xhNsBgOGAlIesewMP_in7J9JKV9yXgR35LEKyGkw7X1HPXBYf4&components=hosted-buttons&disable-funding=venmo&currency=USD"
+        src="https://www.paypal.com/sdk/js?client-id=AaHjShPcAglIoVF6mCBk1BrX9VnKL0xZOXlwi_upiWgCvrWQ4NoEPrVNBzoEC0jWWmkdODO-MU6HqH82&components=hosted-buttons&disable-funding=venmo&currency=USD"
         strategy="afterInteractive"
       />
 
