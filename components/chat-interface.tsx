@@ -213,7 +213,7 @@ export function ChatInterface({ chatId }: ChatInterfaceProps) {
           textareaRef.current?.focus();
         }, 50); // 50ms delay
       }
-  }, [chatId, selectedModel, isLoadingModels, addMessage, updateChatName]); // Dependencies
+  }, [chatId, selectedModel, isLoadingModels]); // Dependencies
 
   // Effect to trigger initial response if messages load BEFORE models
    useEffect(() => {
