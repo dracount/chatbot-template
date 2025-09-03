@@ -1,5 +1,3 @@
-// D:\PROCESSES\vscode_projects\AI_Lifecoach\chatbot-template\components\pricing-content.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
