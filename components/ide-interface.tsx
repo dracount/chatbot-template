@@ -207,7 +207,7 @@ export function IdeInterfaceComponent() {
       // Continue animation loop
       animationFrameRef.current = requestAnimationFrame(animate);
     }
-  }, [prompt, isModelDropdownOpen, currentPromptIndex]);
+  }, [currentPlaceholder, showTabButton, prompt, isModelDropdownOpen, currentPromptIndex]);
   
   // Start and clean up animation
   useEffect(() => {
