@@ -15,9 +15,16 @@ export async function POST(request: Request) {
     console.log('--- PayPal Webhook Received ---');
     console.log(JSON.stringify(event, null, 2));
 
-    // Check if it's the event we care about
-    if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
-      const customId = event.resource?.purchase_units[0]?.custom_id;
+    if (event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED' || event.event_type === 'PAYMENT.SALE.COMPLETED') {
+
+      let customId;
+      if (event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+        // For subscriptions, it's directly in the resource
+        customId = event.resource?.custom_id;
+      } else if (event.event_type === 'PAYMENT.SALE.COMPLETED') {
+        // For sales, it's called 'custom'
+        customId = event.resource?.custom;
+    }
 
       if (!customId) {
         console.error('Webhook Error: No custom_id (User ID) found in payload.');
