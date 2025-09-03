@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/utils/supabase/client';
 
 import { loadScript } from "@paypal/paypal-js";
-import type { PayPalScriptOptions, OnApproveData, OnApproveActions, CreateSubscriptionActions } from "@paypal/paypal-js";
+import type { PayPalScriptOptions, OnApproveData, CreateSubscriptionActions } from "@paypal/paypal-js";
 
 // Interface for a single product from Supabase
 interface Product {
