@@ -3,7 +3,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createSupabaseClient } from '@/utils/supabase/client'; // Import Supabase client
+import { useRouter } from 'next/navigation';
+import { createSupabaseClient } from '@/utils/supabase/client';
+
+// Import the PayPal script loader and the correct types
+import { loadScript } from "@paypal/paypal-js";
+import type { PayPalScriptOptions, OnApproveData, OnApproveActions, CreateSubscriptionActions } from "@paypal/paypal-js";
 
 // Interface for a single product from Supabase
 interface Product {
@@ -19,7 +24,13 @@ interface PricingContentProps {
 
 export default function PricingContent({ products }: PricingContentProps) {
   const supabase = createSupabaseClient();
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  
+  const [isPayPalReady, setIsPayPalReady] = useState(false);
+
+  const freeProduct = products.find((p) => p.id === 'plan_free');
+  const paidProduct = products.find((p) => p.id === 'plan_paid');
 
   // On component load, get the current user's ID
   useEffect(() => {
@@ -32,14 +43,60 @@ export default function PricingContent({ products }: PricingContentProps) {
     getUser();
   }, [supabase]);
 
-  const freeProduct = products.find((p) => p.id === 'plan_free');
-  const paidProduct = products.find((p) => p.id === 'plan_paid');
+  useEffect(() => {
+    if (!userId) return;
 
-  // +++ CHANGE IS HERE +++
-  // Construct the dynamic PayPal link with the user's ID
-  // The 'custom_id' is how we'll identify the user in the webhook!
-  const basePaymentLink = `https://www.sandbox.paypal.com/ncp/payment/K5TZYYUSFX672`;
-  const paymentLink = userId ? `${basePaymentLink}?custom_id=${userId}` : '#';
+    let isMounted = true;
+
+    // FIXED: The key must be camelCase: 'clientId'
+    const paypalOptions: PayPalScriptOptions = {
+      clientId: "AaHjShPcAglIoVF6mCBk1BrX9VnKL0xZOXlwi_upiWgCvrWQ4NoEPrVNBzoEC0jWWmkdODO-MU6HqH82",
+      vault: true,
+      intent: "subscription",
+    };
+
+    loadScript(paypalOptions)
+    .then((paypal) => {
+        // FIXED: Check that paypal object is not null or undefined
+        if (isMounted && paypal?.Buttons) {
+            paypal.Buttons({
+                style: {
+                    shape: 'rect',
+                    color: 'white',
+                    layout: 'vertical',
+                    label: 'subscribe'
+                },
+                // FIXED: The 'data' parameter doesn't have a named export type and isn't used, so we can remove the explicit type.
+                createSubscription: function(data, actions: CreateSubscriptionActions) {
+                    return actions.subscription.create({
+                        plan_id: 'P-84N15354J7002974TNC4AMVY',
+                        custom_id: userId
+                    });
+                },
+                // FIXED: onApprove must be async to return a Promise.
+                onApprove: async function(data: OnApproveData, actions: OnApproveActions) {
+                    console.log('Subscription approved:', data.subscriptionID);
+                    router.push('/payment-success');
+                },
+                onError: function (err: Record<string, any>) {
+                    console.error('PayPal button error:', err);
+                }
+            }).render('#paypal-button-container');
+
+            setIsPayPalReady(true);
+        }
+    })
+    .catch((err) => {
+        console.error("Failed to load the PayPal JS SDK script:", err);
+    });
+
+    return () => {
+      isMounted = false;
+      const container = document.getElementById('paypal-button-container');
+      if (container) container.innerHTML = "";
+    };
+
+  }, [userId, router]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start justify-center max-w-4xl mx-auto">
@@ -65,18 +122,9 @@ export default function PricingContent({ products }: PricingContentProps) {
           <p className="text-4xl font-bold my-4">$10<span className="text-gray-500 text-lg">/month</span></p>
           <p className="text-gray-500 mb-6 flex-grow">{paidProduct.description}</p>
           <div className="mt-auto min-h-[50px]">
-            {/* The simple payment button */}
-            <a
-              // +++ AND HERE +++
-              href={paymentLink}
-              target="_blank" // Opens PayPal in a new tab
-              rel="noopener noreferrer"
-              className={`w-full text-center block py-3 rounded-md font-semibold text-white transition-colors ${
-                userId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {userId ? 'Upgrade to Illuminate' : 'Loading...'}
-            </a>
+            {!isPayPalReady && userId && <div className="text-center text-gray-500">Loading Payment Options...</div>}
+            
+            <div id="paypal-button-container"></div>
           </div>
         </div>
       )}
