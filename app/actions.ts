@@ -1146,4 +1146,31 @@ export async function getContextItemById(itemId: string): Promise<ContextItem | 
   }
 }
 
+export async function getUserPlan(): Promise<string | null> {
+  try {
+    const supabase = await createSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return null;
+    }
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user plan:", error);
+      return 'free'; // Default to free on error
+    }
+
+    return profile?.plan ?? 'free';
+
+  } catch (err) {
+    console.error("Unexpected error in getUserPlan:", err);
+    return 'free';
+  }
+}
 // --- End Context Item Actions ---

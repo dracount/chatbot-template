@@ -8,13 +8,14 @@ create table public.profiles (
   full_name text,
   avatar_url text,
   website text,
-  enabled_models text[] default '{}', -- Added during ALTER steps below, included here for completeness
-  selected_model text,            -- Added during ALTER steps below, included here for completeness
+  plan text default 'free', -- ADDED: User's subscription plan, defaults to 'free' for new users.
+  enabled_models text[] default '{}',
+  selected_model text,
   constraint username_length check (char_length(username) >= 3)
 );
 
 -- 2. Set up Row Level Security (RLS) for profiles
-alter table public.profiles enable row level security; 
+alter table public.profiles enable row level security;
 
 -- 3. RLS Policies for profiles:
 create policy "Public profiles are viewable by everyone." on public.profiles
@@ -26,14 +27,6 @@ create policy "Users can insert their own profile." on public.profiles
 create policy "Users can update own profile." on public.profiles
   for update using (auth.uid() = id);
 
--- Note: Columns enabled_models and selected_model were added via ALTER in original steps,
--- but are included in the initial CREATE TABLE above for simplicity in a single script.
--- If running ALTER separately, uncomment the lines below and remove from CREATE TABLE:
--- alter table public.profiles
---  add column enabled_models text[] default '{}'; 
--- alter table public.profiles
---    add column selected_model text; 
-
 -- ==========================================================================
 -- Chat Tables Setup
 -- ==========================================================================
@@ -42,8 +35,8 @@ create policy "Users can update own profile." on public.profiles
 CREATE TABLE public.chats (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  name TEXT NULL, 
-  model_id TEXT NULL, 
+  name TEXT NULL,
+  model_id TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -70,11 +63,11 @@ CREATE POLICY "Allow DELETE for own chats" ON public.chats
 -- 2. Create the 'messages' table
 CREATE TABLE public.messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE, 
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE, 
-  sender TEXT NOT NULL CHECK (sender IN ('user', 'ai')), 
-  content TEXT NOT NULL, 
-  model_id TEXT NULL, 
+  chat_id UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  sender TEXT NOT NULL CHECK (sender IN ('user', 'ai')),
+  content TEXT NOT NULL,
+  model_id TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -205,9 +198,9 @@ BEFORE UPDATE ON public.profiles
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
 
--- ==========================================================================\
--- Trigger for Creating Profiles for New Users\
--- ==========================================================================\
+-- ==========================================================================
+-- Trigger for Creating Profiles for New Users
+-- ==========================================================================
 
 -- Function to create a profile entry when a new user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -232,6 +225,6 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- ==========================================================================\
--- End of Script\
--- ========================================================================== 
+-- ==========================================================================
+-- End of Script
+-- ==========================================================================
