@@ -67,7 +67,7 @@ export default function PricingContent({ products }: PricingContentProps) {
                         custom_id: userId
                     });
                 },
-                onApprove: async function(data: OnApproveData, _actions: OnApproveActions) {
+                onApprove: async function(data: OnApproveData) {
                     console.log('Subscription approved:', data.subscriptionID);
                     router.push('/payment-success');
                 },

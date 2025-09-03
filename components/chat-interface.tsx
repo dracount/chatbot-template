@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ImageIcon, ArrowUp, Check, Loader2, PlusIcon, BookText, XIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { getUserModelSettings, updateUserSelectedModel, getAnthropicResponse, addMessage, getMessagesForChat, updateChatName } from '@/app/actions';
+import { getUserModelSettings, updateUserSelectedModel, getAnthropicResponse, addMessage, getMessagesForChat } from '@/app/actions';
 import { SettingsModal } from './settings-modal';
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from "@/components/ui/skeleton";
