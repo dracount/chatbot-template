@@ -4,17 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/utils/supabase/client';
 import { loadScript } from "@paypal/paypal-js";
-import type { PayPalScriptOptions, OnApproveData, CreateSubscriptionActions } from "@paypal/paypal-js";
+// --- FIX #1: Unused types 'OnApproveData' and 'CreateSubscriptionActions' have been removed from this import ---
+import type { PayPalScriptOptions } from "@paypal/paypal-js";
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-// Define the shape of our Product object, now including the PayPal Plan ID
+// Define the shape of our Product object
 interface Product {
-  id: string; // 'free', 'illuminate', 'premium'
+  id: string;
   name: string;
   description: string | null;
-  price_description: string | null; // e.g., "Free", "$10/month"
-  paypal_plan_id: string | null; // The corresponding ID from PayPal
+  price_description: string | null;
+  paypal_plan_id: string | null;
 }
 
 interface PricingContentProps {
@@ -47,19 +48,16 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
           paypal.Buttons({
             style: { shape: 'rect', color: 'white', layout: 'vertical', label: 'subscribe' },
             
-            // --- FIX APPLIED HERE ---
-            createSubscription: function(_data, actions) { // Removed type hint to be safe, it's inferred
+            // --- FIX #2 & #3: Parameters are cleaned up to satisfy the linter ---
+            createSubscription: function(_data, actions) {
               return actions.subscription.create({
                 plan_id: product.paypal_plan_id!,
                 custom_id: userId
               });
             },
-            
-            // --- FIX APPLIED HERE ---
-            onApprove: async function(_data) { // Removed type hint to be safe, it's inferred
+            onApprove: async function(_data) {
               router.push('/payment-success');
             },
-
             onError: function (err) {
               console.error('PayPal button error:', err);
             }
@@ -105,7 +103,6 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start justify-center max-w-6xl mx-auto">
-      {/* We now map over ALL products and render a card for each one */}
       {products.map((product) => {
         const isCurrentPlan = product.id === currentUserPlan;
         const isPaidProduct = !!product.paypal_plan_id;
@@ -123,12 +120,9 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
               {isCurrentPlan ? (
                 <Button disabled className="w-full">Your Current Plan</Button>
               ) : (
-                // If it's a paid product, show the PayPal button.
-                // The user must be logged in (userId is not null)
                 isPaidProduct && userId ? (
                   <PayPalButton userId={userId} product={product} />
                 ) : (
-                  // Handle other cases, e.g., a "downgrade" button or nothing
                   <Button variant="outline" className="w-full" disabled={!userId}>
                     {userId ? 'Select Plan' : 'Log in to select'}
                   </Button>
