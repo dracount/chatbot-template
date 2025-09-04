@@ -4,18 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/utils/supabase/client';
 import { loadScript } from "@paypal/paypal-js";
-// This import is now clean - unused types have been removed.
-import type { PayPalScriptOptions } from "@paypal/paypal-js"; 
+import type { PayPalScriptOptions } from "@paypal/paypal-js";
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-// Interface for a single Product
+// Simplified Product interface to match your table
 interface Product {
-  id: string;
+  id: string; // 'plan_free', 'illuminate'
   name: string;
   description: string | null;
-  price_description: string | null;
-  paypal_plan_id: string | null;
 }
 
 interface PricingContentProps {
@@ -23,14 +20,11 @@ interface PricingContentProps {
   currentUserPlan: string | null;
 }
 
-// Reusable component for the PayPal button
-function PayPalButton({ userId, product }: { userId: string; product: Product }) {
+function PayPalButton({ userId, planId }: { userId: string; planId: string }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!product.paypal_plan_id) return;
-
     let isMounted = true;
     const paypalOptions: PayPalScriptOptions = {
       clientId: "AaHjShPcAglIoVF6mCBk1BrX9VnKL0xZOXlwi_upiWgCvrWQ4NoEPrVNBzoEC0jWWmkdODO-MU6HqH82",
@@ -41,54 +35,39 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
     loadScript(paypalOptions)
       .then((paypal) => {
         if (isMounted && paypal?.Buttons) {
-          const containerId = `#paypal-button-${product.id}`;
+          const containerId = `#paypal-button-${planId}`;
           const container = document.querySelector(containerId);
           if (container) container.innerHTML = "";
 
           paypal.Buttons({
             style: { shape: 'rect', color: 'white', layout: 'vertical', label: 'subscribe' },
-            
-            // The function parameters are now correctly prefixed and will be ignored by the linter.
             createSubscription: function(_data, actions) {
               return actions.subscription.create({
-                plan_id: product.paypal_plan_id!,
+                plan_id: 'P-84N15354J7002974TNC4AMVY', // This is your hardcoded PayPal ID for the Illuminate plan
                 custom_id: userId
               });
             },
             onApprove: async function(_data) {
               router.push('/payment-success');
             },
-            onError: function (err) {
-              console.error('PayPal button error:', err);
-            }
           }).render(containerId);
           
           setIsLoading(false);
         }
       })
-      .catch((err) => {
-        console.error("Failed to load PayPal SDK:", err);
-        setIsLoading(false);
-      });
+      .catch((err) => console.error("Failed to load PayPal SDK:", err));
 
     return () => { isMounted = false; };
-  }, [userId, product, router]);
-
-  if (!product.paypal_plan_id) return null;
+  }, [userId, planId, router]);
 
   return (
     <div className="min-h-[50px]">
-      {isLoading && (
-        <div className="flex items-center justify-center">
-          <Spinner /><span className="ml-2 text-gray-500">Loading...</span>
-        </div>
-      )}
-      <div id={`paypal-button-${product.id}`}></div>
+      {isLoading && <div className="flex justify-center"><Spinner /></div>}
+      <div id={`paypal-button-${planId}`}></div>
     </div>
   );
 }
 
-// --- Main Pricing Page Component ---
 export default function PricingContent({ products, currentUserPlan }: PricingContentProps) {
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -102,10 +81,9 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start justify-center max-w-6xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start justify-center max-w-4xl mx-auto">
       {products.map((product) => {
         const isCurrentPlan = product.id === currentUserPlan;
-        const isPaidProduct = !!product.paypal_plan_id;
 
         return (
           <div 
@@ -113,19 +91,19 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
             className={`border rounded-lg p-8 flex flex-col h-full ${isCurrentPlan ? 'border-2 border-blue-500 ring-4 ring-blue-500/20' : ''}`}
           >
             <h2 className="text-2xl font-semibold">{product.name}</h2>
-            <p className="text-4xl font-bold my-4">{product.price_description}</p>
-            <p className="text-gray-500 mb-6 flex-grow">{product.description}</p>
+            {/* You can add price display here */}
+            <p className="text-gray-500 my-6 flex-grow">{product.description}</p>
             
             <div className="mt-auto">
               {isCurrentPlan ? (
                 <Button disabled className="w-full">Your Current Plan</Button>
               ) : (
-                isPaidProduct && userId ? (
-                  <PayPalButton userId={userId} product={product} />
+                // Show PayPal button only for the 'illuminate' plan and if user is logged in
+                product.id === 'illuminate' && userId ? (
+                  <PayPalButton userId={userId} planId={product.id} />
                 ) : (
-                  <Button variant="outline" className="w-full" disabled={!userId}>
-                    {userId ? 'Select Plan' : 'Log in to select'}
-                  </Button>
+                  // For the free plan, it will show a disabled button if it's not the current plan.
+                  <Button variant="outline" className="w-full" disabled>Select Plan</Button>
                 )
               )}
             </div>
