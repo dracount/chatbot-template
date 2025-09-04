@@ -1,11 +1,8 @@
-// D:\PROCESSES\vscode_projects\AI_Lifecoach\chatbot-template\app\pricing\page.tsx
-
 import PricingContent from "@/components/pricing-content";
-import { createSupabaseClient } from "@/utils/supabase/server"; // Use Supabase server client
+import { createSupabaseClient } from "@/utils/supabase/server";
 
-// Define a simple type for our product data from Supabase
 interface Product {
-  id: string;
+  id: string; // This should correspond to the plan name, e.g., 'illuminate'
   name: string;
   description: string | null;
 }
@@ -13,11 +10,35 @@ interface Product {
 export default async function PricingPage() {
   const supabase = await createSupabaseClient();
 
-  // Fetch products directly from your Supabase table
+  // --- START OF NEW LOGIC ---
+
+  let currentUserPlan: string | null = 'free'; // Default to 'free'
+
+  // 1. Get the current user
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    // 2. If user exists, get their plan from their profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching user plan for pricing page:", profileError);
+    } else {
+      currentUserPlan = profile?.plan ?? 'free';
+    }
+  }
+
+  // --- END OF NEW LOGIC ---
+
+  // Fetch all available products (this part is the same as before)
   const { data: products, error } = await supabase
-    .from('products')
+    .from('products') // Assuming you have a 'products' table in Supabase
     .select('*')
-    .order('id', { ascending: true }); // Order by ID to ensure 'plan_free' is first
+    .order('id', { ascending: true });
 
   if (error || !products) {
     console.error("Error fetching products from Supabase:", error);
@@ -28,17 +49,20 @@ export default async function PricingPage() {
     );
   }
 
-  // NOTE: We don't need to know the user's current plan on the server anymore,
-  // the UI will just show the options.
-
   return (
     <div className="max-w-[1200px] mx-auto px-6 py-16">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-medium mb-4">Choose your plan</h1>
       </div>
 
-      {/* Pass the products from Supabase to the UI component */}
-      <PricingContent products={products as Product[]} />
+      {/* 
+        * NOW, we pass BOTH the list of all products AND the user's current plan 
+        * to the UI component.
+      */}
+      <PricingContent 
+        products={products as Product[]} 
+        currentUserPlan={currentUserPlan} 
+      />
     </div>
   );
 }
