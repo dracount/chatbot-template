@@ -42,7 +42,10 @@ export default async function PricingPage() {
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
-    .order('price_description', { ascending: true }); // Example: order by price to show Free first
+    .order('id', { ascending: true }); // Example: order by price to show Free first
+    
+    console.log("[SERVER LOG] Fetched User Plan:", currentUserPlan);
+    console.log("[SERVER LOG] Fetched Products:", products);
 
   // Handle the case where products fail to load
   if (productsError || !products) {
