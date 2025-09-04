@@ -124,70 +124,51 @@ function formatRenewalDate(dateString: string | null | undefined): string | null
 // Server Action to get detailed subscription status
 export async function getSubscriptionDetails(): Promise<{
   planName: string | null;
-  subscriptionId: string | null;
-  canUpgrade: boolean;
-  renewalDate: string | null;
-  isCancelled: boolean;
+  subscriptionId: string | null; // Keeping for type consistency
+  canUpgrade: boolean;           // Keeping for type consistency
+  renewalDate: string | null;    // Keeping for type consistency
+  isCancelled: boolean;          // Keeping for type consistency
 }> {
-  let planName: string | null = null;
-  let subscriptionId: string | null = null;
-  let canUpgrade = false;
-  let currentPrice = -1; 
-  let renewalDate: string | null = null;
-  let isCancelled = false;
-
   try {
-    const updateClient = await createUpdateClient();
-    
-    // Fetch current subscription(s)
-    const { data: subData, error: subError } = await updateClient.billing.getSubscriptions();
+    const supabase = await createSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (subError) {
-      console.error("Error fetching subscriptions:", subError);
-    } else {
-      const activeSub = subData?.subscriptions?.find(
-        (sub) => sub.status === 'active'
-      );
-
-      if (activeSub) {
-        subscriptionId = activeSub.id;
-        planName = activeSub.product?.name ?? null; 
-        currentPrice = activeSub.price?.unit_amount ?? -1; 
-        // Format renewal date
-        renewalDate = formatRenewalDate(activeSub.current_period_end);
-        // Get cancellation status
-        isCancelled = activeSub.cancel_at_period_end;
-
-         if (!planName) {
-            console.warn("Active subscription found but product name is missing. Sub ID:", subscriptionId);
-         }
-      }
+    if (!user) {
+      // If no user, they have no plan
+      return { planName: null, subscriptionId: null, canUpgrade: true, renewalDate: null, isCancelled: false };
     }
 
-    // Fetch all products to check for potential upgrades
-    const { data: prodData, error: prodError } = await updateClient.billing.getProducts();
-    if (prodError) {
-      console.error("Error fetching products:", prodError);
-    } else if (prodData?.products) {
-      if (currentPrice > -1) {
-         canUpgrade = prodData.products.some(product => 
-           product.prices?.some(price => 
-             price.unit_amount !== null && price.unit_amount > currentPrice
-           )
-         );
-      } else {
-         canUpgrade = prodData.products.some(product => 
-           product.prices?.some(price => price.unit_amount !== null && price.unit_amount > 0)
-         );
-      }
+    // Fetch the user's profile from Supabase
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !profile) {
+      console.error("Error fetching user profile:", error);
+      // Default to a free plan status if profile is missing
+      return { planName: 'free', subscriptionId: null, canUpgrade: true, renewalDate: null, isCancelled: false };
     }
 
-    return { planName, subscriptionId, canUpgrade, renewalDate, isCancelled };
+    // The plan name is now directly from our database
+    const planName = profile.plan;
+
+    // If the plan is not 'free', they have an active plan.
+    // We set canUpgrade to false for simplicity, but you could add more logic here.
+    const canUpgrade = planName === 'free';
+
+    return {
+      planName,
+      subscriptionId: null, // This came from the "Update" service, we don't have it here
+      canUpgrade,
+      renewalDate: null,    // We don't store this from PayPal currently
+      isCancelled: false    // We don't store this from PayPal currently
+    };
 
   } catch (err) {
     console.error("Unexpected error checking subscription details:", err);
-    // Return defaults including new fields
-    return { planName: null, subscriptionId: null, canUpgrade: false, renewalDate: null, isCancelled: false };
+    return { planName: null, subscriptionId: null, canUpgrade: true, renewalDate: null, isCancelled: false };
   }
 }
 
