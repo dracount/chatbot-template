@@ -99,28 +99,6 @@ export async function createCheckout(priceId: string) {
   return redirect(data.url);
 }
 
-// Formats UTC date string to Month Day, Year
-function formatRenewalDate(dateString: string | null | undefined): string | null {
-  if (!dateString) return null;
-  try {
-    const date = new Date(dateString);
-    // Ensure the date is valid before formatting
-    if (isNaN(date.getTime())) {
-      console.warn("Invalid date string received:", dateString);
-      return null;
-    }
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'UTC' // Specify UTC to avoid local time zone shifts
-    });
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return null;
-  }
-}
-
 // Server Action to get detailed subscription status
 export async function getSubscriptionDetails(): Promise<{
   planName: string | null;
