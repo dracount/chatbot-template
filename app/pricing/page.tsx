@@ -42,8 +42,8 @@ export default async function PricingPage() {
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
-    .order('id', { ascending: true }); // Example: order by price to show Free first
-    
+    .order('display_order', { ascending: true }); // Example: order by price to show Free first
+
     console.log("[SERVER LOG] Fetched User Plan:", currentUserPlan);
     console.log("[SERVER LOG] Fetched Products:", products);
 

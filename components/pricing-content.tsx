@@ -8,9 +8,8 @@ import type { PayPalScriptOptions } from "@paypal/paypal-js";
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-// Simplified Product interface to match your table
 interface Product {
-  id: string; // 'plan_free', 'illuminate'
+  id: string;
   name: string;
   description: string | null;
 }
@@ -43,7 +42,7 @@ function PayPalButton({ userId, planId }: { userId: string; planId: string }) {
             style: { shape: 'rect', color: 'white', layout: 'vertical', label: 'subscribe' },
             createSubscription: function(_data, actions) {
               return actions.subscription.create({
-                plan_id: 'P-84N15354J7002974TNC4AMVY', // This is your hardcoded PayPal ID for the Illuminate plan
+                plan_id: 'P-84N15354J7002974TNC4AMVY',
                 custom_id: userId
               });
             },
@@ -91,19 +90,18 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
             className={`border rounded-lg p-8 flex flex-col h-full ${isCurrentPlan ? 'border-2 border-blue-500 ring-4 ring-blue-500/20' : ''}`}
           >
             <h2 className="text-2xl font-semibold">{product.name}</h2>
-            {/* You can add price display here */}
             <p className="text-gray-500 my-6 flex-grow">{product.description}</p>
             
             <div className="mt-auto">
               {isCurrentPlan ? (
                 <Button disabled className="w-full">Your Current Plan</Button>
               ) : (
-                // Show PayPal button only for the 'illuminate' plan and if user is logged in
                 product.id === 'illuminate' && userId ? (
                   <PayPalButton userId={userId} planId={product.id} />
                 ) : (
-                  // For the free plan, it will show a disabled button if it's not the current plan.
-                  <Button variant="outline" className="w-full" disabled>Select Plan</Button>
+                  <Button variant="outline" className="w-full" disabled={!userId}>
+                    {userId ? 'Select Plan' : 'Log in to select'}
+                  </Button>
                 )
               )}
             </div>
