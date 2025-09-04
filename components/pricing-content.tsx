@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/utils/supabase/client';
 import { loadScript } from "@paypal/paypal-js";
-// --- FIX #1: Unused types 'OnApproveData' and 'CreateSubscriptionActions' have been removed from this import ---
-import type { PayPalScriptOptions } from "@paypal/paypal-js";
+// This import is now clean - unused types have been removed.
+import type { PayPalScriptOptions } from "@paypal/paypal-js"; 
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-// Define the shape of our Product object
+// Interface for a single Product
 interface Product {
   id: string;
   name: string;
@@ -23,7 +23,7 @@ interface PricingContentProps {
   currentUserPlan: string | null;
 }
 
-// A smaller, reusable component for the PayPal button
+// Reusable component for the PayPal button
 function PayPalButton({ userId, product }: { userId: string; product: Product }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +48,7 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
           paypal.Buttons({
             style: { shape: 'rect', color: 'white', layout: 'vertical', label: 'subscribe' },
             
-            // --- FIX #2 & #3: Parameters are cleaned up to satisfy the linter ---
+            // The function parameters are now correctly prefixed and will be ignored by the linter.
             createSubscription: function(_data, actions) {
               return actions.subscription.create({
                 plan_id: product.paypal_plan_id!,
