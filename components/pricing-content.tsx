@@ -53,7 +53,7 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
                 custom_id: userId
               });
             },
-            onApprove: async function(data: OnApproveData) {
+            onApprove: async function(_data: OnApproveData) {
               router.push('/payment-success');
             },
             onError: function (err: unknown) {
