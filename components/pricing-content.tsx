@@ -83,6 +83,9 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start justify-center max-w-4xl mx-auto">
       {products.map((product) => {
         const isCurrentPlan = product.id === currentUserPlan;
+        
+        // --- NEW LOGIC: A boolean to check if the user is on any paid plan ---
+        const isUserOnPaidPlan = currentUserPlan && currentUserPlan !== 'plan_free';
 
         return (
           <div 
@@ -93,16 +96,22 @@ export default function PricingContent({ products, currentUserPlan }: PricingCon
             <p className="text-gray-500 my-6 flex-grow">{product.description}</p>
             
             <div className="mt-auto">
+              {/* --- ENHANCED BUTTON LOGIC --- */}
               {isCurrentPlan ? (
+                // Case 1: This card is the user's current plan.
                 <Button disabled className="w-full">Your Current Plan</Button>
+              ) : product.id === 'illuminate' && userId ? (
+                // Case 2: This is the 'illuminate' card and the user is logged in. Show payment button.
+                <PayPalButton userId={userId} planId={product.id} />
+              ) : product.id === 'plan_free' && isUserOnPaidPlan ? (
+                // Case 3 (NEW): This is the 'free' card, and the user is currently on a paid plan.
+                // Show a disabled button to indicate a downgrade path.
+                <Button variant="outline" className="w-full" disabled>
+                  Downgrade to Free
+                </Button>
               ) : (
-                product.id === 'illuminate' && userId ? (
-                  <PayPalButton userId={userId} planId={product.id} />
-                ) : (
-                  <Button variant="outline" className="w-full" disabled={!userId}>
-                    {userId ? 'Select Plan' : 'Log in to select'}
-                  </Button>
-                )
+                // Fallback Case: For any other situation (e.g., logged out user on free plan card).
+                <Button variant="outline" className="w-full" disabled>Select Plan</Button>
               )}
             </div>
           </div>
