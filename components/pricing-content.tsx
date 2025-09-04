@@ -47,12 +47,14 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
 
           paypal.Buttons({
             style: { shape: 'rect', color: 'white', layout: 'vertical', label: 'subscribe' },
+            // --- FIX IS HERE ---
             createSubscription: function(_data, actions: CreateSubscriptionActions) {
               return actions.subscription.create({
                 plan_id: product.paypal_plan_id!, // Use the dynamic plan ID from the product
                 custom_id: userId
               });
             },
+            // --- AND FIX IS HERE ---
             onApprove: async function(_data: OnApproveData) {
               router.push('/payment-success');
             },
