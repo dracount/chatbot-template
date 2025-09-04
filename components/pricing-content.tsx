@@ -28,7 +28,6 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // If there's no PayPal plan ID for this product, do nothing.
     if (!product.paypal_plan_id) return;
 
     let isMounted = true;
@@ -43,22 +42,25 @@ function PayPalButton({ userId, product }: { userId: string; product: Product })
         if (isMounted && paypal?.Buttons) {
           const containerId = `#paypal-button-${product.id}`;
           const container = document.querySelector(containerId);
-          if (container) container.innerHTML = ""; // Clear previous buttons
+          if (container) container.innerHTML = "";
 
           paypal.Buttons({
             style: { shape: 'rect', color: 'white', layout: 'vertical', label: 'subscribe' },
-            // --- FIX IS HERE ---
-            createSubscription: function(_data, actions: CreateSubscriptionActions) {
+            
+            // --- FIX APPLIED HERE ---
+            createSubscription: function(_data, actions) { // Removed type hint to be safe, it's inferred
               return actions.subscription.create({
-                plan_id: product.paypal_plan_id!, // Use the dynamic plan ID from the product
+                plan_id: product.paypal_plan_id!,
                 custom_id: userId
               });
             },
-            // --- AND FIX IS HERE ---
-            onApprove: async function(_data: OnApproveData) {
+            
+            // --- FIX APPLIED HERE ---
+            onApprove: async function(_data) { // Removed type hint to be safe, it's inferred
               router.push('/payment-success');
             },
-            onError: function (err: unknown) {
+
+            onError: function (err) {
               console.error('PayPal button error:', err);
             }
           }).render(containerId);
