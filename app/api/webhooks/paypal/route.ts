@@ -41,9 +41,13 @@ export async function POST(request: Request) {
 
       // --- THE FIX IS HERE ---
       // We removed `data` from the line below because it wasn't being used.
+      const subscriptionId = event.resource?.id; // Get the ID from the webhook payload
       const { error } = await supabaseAdmin
         .from('profiles')
-        .update({ plan: 'illuminate' })
+        .update({ 
+          plan: 'illuminate',
+          paypal_subscription_id: subscriptionId 
+        })
         .eq('id', customId);
 
       if (error) {

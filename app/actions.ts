@@ -150,37 +150,6 @@ export async function getSubscriptionDetails(): Promise<{
   }
 }
 
-// Server Action to cancel a subscription
-export async function cancelSubscriptionAction(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
-   if (!subscriptionId) {
-     return { success: false, error: "Subscription ID is required." };
-   }
-   try {
-     const updateClient = await createUpdateClient();
-     // Using the CORRECT method: updateSubscription with cancel_at_period_end
-     const { error } = await updateClient.billing.updateSubscription(subscriptionId, {
-       cancel_at_period_end: true,
-     });
-
-     if (error) {
-       console.error("Error cancelling subscription:", error);
-       return { success: false, error: error.message || "Failed to cancel subscription." };
-     }
-
-     revalidatePath("/"); // Revalidate relevant paths after cancellation
-     revalidatePath("/pricing");
-     // Consider revalidating other paths where subscription state is shown
-
-     return { success: true };
-
-   } catch (err: unknown) { // Use unknown instead of any
-     console.error("Unexpected error cancelling subscription:", err);
-     // Type check the error
-     const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
-     return { success: false, error: errorMessage };
-   }
-}
-
 // Server Action to reactivate a subscription
 export async function reactivateSubscriptionAction(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
   if (!subscriptionId) {
@@ -1132,4 +1101,85 @@ export async function getUserPlan(): Promise<string | null> {
     return 'free';
   }
 }
-// --- End Context Item Actions ---
+
+// Add this new function to app/actions.ts and remove the old one.
+
+export async function cancelSubscriptionAction(): Promise<{ success: boolean; error?: string }> {
+  'use server';
+
+  // Make sure you have the createSupabaseClient import at the top of the file
+  const supabase = await createSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "User not authenticated." };
+  }
+
+  // 1. Get the user's current PayPal subscription ID from their profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('paypal_subscription_id')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile?.paypal_subscription_id) {
+    return { success: false, error: "Could not find an active subscription to cancel." };
+  }
+
+  const subscriptionId = profile.paypal_subscription_id;
+
+  // 2. Get an access token from PayPal using your server-side credentials
+  const { NEXT_PUBLIC_PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+  const auth = Buffer.from(`${NEXT_PUBLIC_PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
+  
+  const tokenResponse = await fetch(`https://api.sandbox.paypal.com/v1/oauth2/token`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'grant_type=client_credentials',
+  });
+
+  const tokenData = await tokenResponse.json();
+  if (!tokenResponse.ok) {
+    console.error("PayPal Auth Error:", tokenData);
+    return { success: false, error: "Failed to authenticate with PayPal." };
+  }
+  const accessToken = tokenData.access_token;
+
+  // 3. Send the cancellation request to PayPal's API
+  const cancelResponse = await fetch(`https://api.sandbox.paypal.com/v1/billing/subscriptions/${subscriptionId}/cancel`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ reason: 'User requested cancellation from app.' }),
+  });
+
+  // A successful cancellation returns a 204 No Content status.
+  if (cancelResponse.status !== 204) {
+    const errorBody = await cancelResponse.json();
+    console.error("PayPal Cancellation Error:", errorBody);
+    return { success: false, error: "PayPal failed to cancel the subscription." };
+  }
+
+  // 4. Update our own database to reflect the downgrade
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ 
+      plan: 'plan_free', 
+      paypal_subscription_id: null // Clear the old subscription ID
+    })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error("Critical Error: PayPal subscription was cancelled, but Supabase profile update failed.", updateError);
+    return { success: false, error: "Downgrade succeeded but there was a database error. Please contact support." };
+  }
+
+  revalidatePath("/pricing"); // Tell Next.js to refresh the pricing page data
+  revalidatePath("/"); // Also refresh the main layout
+  return { success: true };
+}
