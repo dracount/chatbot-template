@@ -186,7 +186,7 @@ export function SettingsModal({ isOpen, setIsOpen, onSettingsChanged }: Settings
     setReactivateError(null);
     setReactivateSuccessMessage(null);
     try {
-      const result = await cancelSubscriptionAction(subscriptionDetails.subscriptionId);
+      const result = await cancelSubscriptionAction();
       if (result.success) {
         const details = await getSubscriptionDetails();
         setSubscriptionDetails(details);
