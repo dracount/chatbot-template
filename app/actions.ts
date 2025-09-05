@@ -1074,34 +1074,6 @@ export async function getContextItemById(itemId: string): Promise<ContextItem | 
   }
 }
 
-export async function getUserPlan(): Promise<string | null> {
-  try {
-    const supabase = await createSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return null;
-    }
-
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', user.id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching user plan:", error);
-      return 'free'; // Default to free on error
-    }
-
-    return profile?.plan ?? 'free';
-
-  } catch (err) {
-    console.error("Unexpected error in getUserPlan:", err);
-    return 'free';
-  }
-}
-
 export async function cancelSubscriptionAction(): Promise<{ success: boolean; error?: string }> {
   'use server';
 
@@ -1178,7 +1150,7 @@ export async function cancelSubscriptionAction(): Promise<{ success: boolean; er
   // 4. Update our own database
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ plan: 'plan_free', paypal_subscription_id: null })
+    .update({ plan: 'free', paypal_subscription_id: null })
     .eq('id', user.id);
 
   if (updateError) {
@@ -1189,4 +1161,35 @@ export async function cancelSubscriptionAction(): Promise<{ success: boolean; er
   revalidatePath("/pricing");
   revalidatePath("/");
   return { success: true };
+}
+
+export async function getUserPlan(): Promise<string | null> {
+  'use server';
+
+  try {
+    const supabase = await createSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return null; // No user, no plan
+    }
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user plan:", error);
+      // Use 'plan_free' for consistency with your database IDs
+      return 'free'; 
+    }
+
+    return profile?.plan ?? 'free';
+
+  } catch (err) {
+    console.error("Unexpected error in getUserPlan:", err);
+    return 'free';
+  }
 }
