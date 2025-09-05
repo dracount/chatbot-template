@@ -1,47 +1,36 @@
-// app/api/generator/webhooks/paypal/route.ts
+// in app/api/webhooks/paypal/route.ts
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-// WARNING: This is a simplified example.
-// In a real-world application, you MUST verify the webhook signature.
-// See PayPal's documentation on webhook verification.
 
 export async function POST(request: Request) {
   try {
     const event = await request.json();
 
-    // Log the event for debugging
+    // Log every event for debugging, but only act on the one we need.
     console.log('--- PayPal Webhook Received ---');
     console.log(JSON.stringify(event, null, 2));
 
-    if (event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED' || event.event_type === 'PAYMENT.SALE.COMPLETED') {
+    // --- THE FIX: Only listen for the definitive subscription activation event ---
+    if (event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+      
+      const resource = event.resource;
+      const customId = resource?.custom_id; // This is the Supabase User ID
+      const subscriptionId = resource?.id;   // This is the correct Subscription ID (e.g., "I-...")
 
-      let customId;
-      if (event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
-        // For subscriptions, it's directly in the resource
-        customId = event.resource?.custom_id;
-      } else if (event.event_type === 'PAYMENT.SALE.COMPLETED') {
-        // For sales, it's called 'custom'
-        customId = event.resource?.custom;
-    }
-
-      if (!customId) {
-        console.error('Webhook Error: No custom_id (User ID) found in payload.');
-        return NextResponse.json({ error: 'User ID missing' }, { status: 400 });
+      if (!customId || !subscriptionId) {
+        console.error('Webhook Error: Missing custom_id or subscription_id in BILLING.SUBSCRIPTION.ACTIVATED payload.');
+        return NextResponse.json({ error: 'Required data missing' }, { status: 400 });
       }
 
-      console.log(`Payment approved for User ID: ${customId}`);
+      console.log(`Subscription ACTIVATED for User ID: ${customId} with Subscription ID: ${subscriptionId}`);
 
-      // Create a Supabase admin client to update the user's profile
       const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
-      // --- THE FIX IS HERE ---
-      // We removed `data` from the line below because it wasn't being used.
-      const subscriptionId = event.resource?.id; // Get the ID from the webhook payload
+      // Save BOTH the plan and the correct subscription ID
       const { error } = await supabaseAdmin
         .from('profiles')
         .update({ 
@@ -51,14 +40,14 @@ export async function POST(request: Request) {
         .eq('id', customId);
 
       if (error) {
-        console.error('Supabase update error:', error);
-        // We still return a 200 OK so PayPal doesn't retry,
-        // but we log the error for manual follow-up.
+        console.error('Supabase update error after subscription activation:', error);
+        // Still return 200 so PayPal doesn't retry a failed DB update.
       } else {
-        console.log(`Successfully updated plan for user ${customId} to 'illuminate'.`);
+        console.log(`Successfully updated profile for user ${customId}.`);
       }
     }
 
+    // Acknowledge receipt of the webhook to PayPal
     return NextResponse.json({ status: 'success' }, { status: 200 });
 
   } catch (error) {
