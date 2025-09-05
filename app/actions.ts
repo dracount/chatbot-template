@@ -1102,12 +1102,9 @@ export async function getUserPlan(): Promise<string | null> {
   }
 }
 
-// Add this new function to app/actions.ts and remove the old one.
-
 export async function cancelSubscriptionAction(): Promise<{ success: boolean; error?: string }> {
   'use server';
 
-  // Make sure you have the createSupabaseClient import at the top of the file
   const supabase = await createSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1115,7 +1112,7 @@ export async function cancelSubscriptionAction(): Promise<{ success: boolean; er
     return { success: false, error: "User not authenticated." };
   }
 
-  // 1. Get the user's current PayPal subscription ID from their profile
+  // 1. Get Subscription ID from our database
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('paypal_subscription_id')
@@ -1123,63 +1120,73 @@ export async function cancelSubscriptionAction(): Promise<{ success: boolean; er
     .single();
 
   if (profileError || !profile?.paypal_subscription_id) {
+    console.error("Downgrade Error: Could not find subscription ID for user.", { userId: user.id, profileError });
     return { success: false, error: "Could not find an active subscription to cancel." };
   }
 
   const subscriptionId = profile.paypal_subscription_id;
-
-  // 2. Get an access token from PayPal using your server-side credentials
   const { NEXT_PUBLIC_PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+
+  if (!NEXT_PUBLIC_PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+      console.error("Downgrade Error: Missing PayPal environment variables on the server.");
+      return { success: false, error: "Server configuration error." };
+  }
+
   const auth = Buffer.from(`${NEXT_PUBLIC_PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
   
-  const tokenResponse = await fetch(`https://api.sandbox.paypal.com/v1/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'grant_type=client_credentials',
-  });
-
-  const tokenData = await tokenResponse.json();
-  if (!tokenResponse.ok) {
-    console.error("PayPal Auth Error:", tokenData);
-    return { success: false, error: "Failed to authenticate with PayPal." };
+  // 2. Get Access Token from PayPal
+  let accessToken;
+  try {
+    const tokenResponse = await fetch(`https://api.sandbox.paypal.com/v1/oauth2/token`, {
+      method: 'POST',
+      headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'grant_type=client_credentials',
+    });
+    const tokenData = await tokenResponse.json();
+    if (!tokenResponse.ok) {
+      // This is the log for authentication failure
+      console.error("PayPal Auth Error:", tokenData);
+      return { success: false, error: "Failed to authenticate with PayPal." };
+    }
+    accessToken = tokenData.access_token;
+  } catch (e) {
+    console.error("Network error during PayPal Auth:", e);
+    return { success: false, error: "Failed to connect to PayPal." };
   }
-  const accessToken = tokenData.access_token;
+  
+  // 3. Send Cancellation Request to PayPal
+  try {
+    const cancelResponse = await fetch(`https://api.sandbox.paypal.com/v1/billing/subscriptions/${subscriptionId}/cancel`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'User requested cancellation from app.' }),
+    });
 
-  // 3. Send the cancellation request to PayPal's API
-  const cancelResponse = await fetch(`https://api.sandbox.paypal.com/v1/billing/subscriptions/${subscriptionId}/cancel`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ reason: 'User requested cancellation from app.' }),
-  });
-
-  // A successful cancellation returns a 204 No Content status.
-  if (cancelResponse.status !== 204) {
-    const errorBody = await cancelResponse.json();
-    console.error("PayPal Cancellation Error:", errorBody);
-    return { success: false, error: "PayPal failed to cancel the subscription." };
+    // A successful cancellation returns a 204 No Content status.
+    // If it's anything else, it's an error.
+    if (cancelResponse.status !== 204) {
+      const errorBody = await cancelResponse.json();
+      // THIS IS THE CRUCIAL LOG WE NEED TO SEE
+      console.error("PayPal Cancellation Error:", errorBody);
+      return { success: false, error: "PayPal failed to cancel the subscription." };
+    }
+  } catch (e) {
+    console.error("Network error during PayPal Cancellation:", e);
+    return { success: false, error: "Failed to connect to PayPal for cancellation." };
   }
 
-  // 4. Update our own database to reflect the downgrade
+  // 4. Update our own database
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ 
-      plan: 'plan_free', 
-      paypal_subscription_id: null // Clear the old subscription ID
-    })
+    .update({ plan: 'plan_free', paypal_subscription_id: null })
     .eq('id', user.id);
 
   if (updateError) {
-    console.error("Critical Error: PayPal subscription was cancelled, but Supabase profile update failed.", updateError);
-    return { success: false, error: "Downgrade succeeded but there was a database error. Please contact support." };
+    console.error("Critical Error: PayPal subscription cancelled, but Supabase update failed.", { userId: user.id, updateError });
+    return { success: false, error: "Downgrade succeeded but a database error occurred. Please contact support." };
   }
 
-  revalidatePath("/pricing"); // Tell Next.js to refresh the pricing page data
-  revalidatePath("/"); // Also refresh the main layout
+  revalidatePath("/pricing");
+  revalidatePath("/");
   return { success: true };
 }
