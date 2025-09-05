@@ -1181,15 +1181,15 @@ export async function getUserPlan(): Promise<string | null> {
       .single();
 
     if (error) {
-      console.error("Error fetching user plan:", error);
-      // Use 'plan_free' for consistency with your database IDs
-      return 'free'; 
+      console.error("Error fetching user plan:", error.message);
+      return 'free'; // Default to free on error
     }
 
     return profile?.plan ?? 'free';
 
   } catch (err) {
-    console.error("Unexpected error in getUserPlan:", err);
+    const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+    console.error("Unexpected error in getUserPlan:", errorMessage);
     return 'free';
   }
 }

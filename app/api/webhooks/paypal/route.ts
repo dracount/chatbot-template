@@ -1,4 +1,4 @@
-// in app/api/webhooks/paypal/route.ts
+// Replace the entire POST function in app/api/webhooks/paypal/route.ts
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -6,12 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 export async function POST(request: Request) {
   try {
     const event = await request.json();
-
-    // Log every event for debugging, but only act on the one we need.
     console.log('--- PayPal Webhook Received ---');
-    console.log(JSON.stringify(event, null, 2));
-
-    // --- THE FIX: Only listen for the definitive subscription activation event ---
+    
+    // Only act on the definitive subscription activation event.
     if (event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
       
       const resource = event.resource;
@@ -19,7 +16,7 @@ export async function POST(request: Request) {
       const subscriptionId = resource?.id;   // This is the correct Subscription ID (e.g., "I-...")
 
       if (!customId || !subscriptionId) {
-        console.error('Webhook Error: Missing custom_id or subscription_id in BILLING.SUBSCRIPTION.ACTIVATED payload.');
+        console.error('Webhook Error: Missing custom_id or subscription_id in payload.');
         return NextResponse.json({ error: 'Required data missing' }, { status: 400 });
       }
 
@@ -41,13 +38,11 @@ export async function POST(request: Request) {
 
       if (error) {
         console.error('Supabase update error after subscription activation:', error);
-        // Still return 200 so PayPal doesn't retry a failed DB update.
       } else {
         console.log(`Successfully updated profile for user ${customId}.`);
       }
     }
 
-    // Acknowledge receipt of the webhook to PayPal
     return NextResponse.json({ status: 'success' }, { status: 200 });
 
   } catch (error) {
@@ -55,3 +50,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }
+
+
