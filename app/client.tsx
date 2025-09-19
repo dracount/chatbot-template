@@ -3,7 +3,7 @@
 
 import { SidebarComponent } from "@/components/sidebar";
 import { ThemeProvider } from "next-themes";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { getSubscriptionDetails } from "@/app/actions";
 import { CheckoutSuccessHandler } from "@/components/checkout-success-handler";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ const Footer = () => {
   );
 };
 
+// This component contains the hooks that need to be suspended.
 function ClientLayoutContent({ children }: ClientLayoutProps) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
@@ -91,10 +93,17 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
   );
 }
 
+// The Suspense boundary is now placed here, wrapping the component that uses the client-side hooks.
 export function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <AuthProvider>
-      <ClientLayoutContent>{children}</ClientLayoutContent>
+      <Suspense fallback={
+        <div className="flex h-screen w-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      }>
+        <ClientLayoutContent>{children}</ClientLayoutContent>
+      </Suspense>
     </AuthProvider>
   );
 }
