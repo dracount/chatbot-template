@@ -97,7 +97,20 @@
 
 @layer utilities {
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    /* Updated for new theme */
+    font-family: var(--font-noto-sans-jp), sans-serif;
+    line-height: 1.8;
+    color: #333333; /* Sumi Ink body text */
+    /* Washi Paper Background */
+    background-image: url('/background_texture.png');
+    background-color: #f7f5f2; /* Fallback color */
+    background-repeat: repeat;
+    background-attachment: fixed;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-noto-serif-jp), serif;
+    color: #1a1a1a; /* Sumi Ink headings */
   }
 }
 

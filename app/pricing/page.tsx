@@ -1,5 +1,7 @@
+// D:/PROCESSES/vscode_projects/AI_Lifecoach/chatbot-template/app/pricing/page.tsx
 import PricingContent from "@/components/pricing-content";
 import { createSupabaseClient } from "@/utils/supabase/server";
+import { PublicHeader } from "@/components/public-header";
 
 // Define the shape of a Product to match our database table,
 // ensuring type safety when we pass props.
@@ -30,7 +32,7 @@ export default async function PricingPage() {
     if (profileError) {
       console.error("Error fetching user plan for pricing page:", profileError);
       // In case of error, we can fall back to 'free'
-      currentUserPlan = 'free'; 
+      currentUserPlan = 'free';
     } else {
       // Set the user's current plan from their profile, defaulting to 'free' if null
       currentUserPlan = profile?.plan ?? 'free';
@@ -58,20 +60,23 @@ export default async function PricingPage() {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-medium mb-4">Choose Your Plan</h1>
-        <p className="text-lg text-gray-500">Select the plan that best fits your needs.</p>
-      </div>
+    <>
+      <PublicHeader />
+      <div className="max-w-[1200px] mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-medium mb-4">A Worthwhile Investment in Yourself</h1>
+          <p className="text-lg text-gray-500">Choose a path that honors your commitment to self-discovery.</p>
+        </div>
 
-      {/* 
-        * Pass the full list of products and the user's current plan string
-        * down to the client component. The client component will handle the rest.
-      */}
-      <PricingContent 
-        products={products as Product[]} 
-        currentUserPlan={currentUserPlan} 
-      />
-    </div>
+        {/*
+          * Pass the full list of products and the user's current plan string
+          * down to the client component. The client component will handle the rest.
+        */}
+        <PricingContent
+          products={products as Product[]}
+          currentUserPlan={currentUserPlan}
+        />
+      </div>
+    </>
   );
 }

@@ -1,15 +1,30 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Noto_Serif_JP, Noto_Sans_JP } from "next/font/google";
 import { ClientLayout } from "./client";
 
-const inter = Inter({ subsets: ["latin"] });
+const notoSerif = Noto_Serif_JP({
+  subsets: ["latin"],
+  weight: ['400', '700'],
+  display: 'swap',
+  variable: '--font-noto-serif-jp',
+});
 
-export const dynamic = 'force-dynamic';
+const notoSans = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-noto-sans-jp',
+});
 
+// --- UPDATED METADATA OBJECT ---
 export const metadata: Metadata = {
-  title: "Chat App",
-  description: "A modern chat application",
+  title: "Clarity",
+  description: "Clarity is not found. It is uncovered.",
+  
+  
+  // This links the web app manifest file.
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({
@@ -19,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${notoSerif.variable} ${notoSans.variable}`}>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

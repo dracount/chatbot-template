@@ -1,9 +1,13 @@
-import { IdeInterfaceComponent } from "@/components/ide-interface";
+// In app/page.tsx
+
+import { Homepage } from "@/components/homepage";
+import { PublicHeader } from "@/components/public-header";
 
 export default function Home() {
   return (
-    <div className="flex-1">
-      <IdeInterfaceComponent />
+    <div>
+      <PublicHeader />
+      <Homepage />
     </div>
   );
 }
