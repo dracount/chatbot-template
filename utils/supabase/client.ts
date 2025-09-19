@@ -1,10 +1,16 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createSupabaseClient() {
-  // This logic checks if the code is running in the Vercel production environment.
-  const supabaseUrl = process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'
-    ? '/api/supabase' // In production, use the Vercel rewrite path.
-    : process.env.NEXT_PUBLIC_SUPABASE_URL!; // For local dev, use the direct URL.
+  // Check if the code is running in a browser environment
+  const isBrowser = typeof window !== 'undefined';
+
+  // Determine the correct Supabase URL
+  // In production on the browser, we construct the full URL for the rewrite.
+  // Otherwise (on the server or in local dev), we use the direct environment variable.
+  const supabaseUrl = 
+    isBrowser && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'
+      ? `${window.location.origin}/api/supabase`
+      : process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
   return createBrowserClient(
     supabaseUrl,
