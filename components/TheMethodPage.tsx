@@ -2,7 +2,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -55,13 +54,13 @@ export function TheMethodPage() {
           </MethodologyStep>
 
           <MethodologyStep number="02" title="The Echo (Illuminating Your Words)">
-            Theia listens. It doesn't analyze or interpret your words, but gently reflects them back to you. In this echo, you hear your own thoughts with new clarity, as if for the first time.
+            Theia listens. It doesn&apos;t analyze or interpret your words, but gently reflects them back to you. In this echo, you hear your own thoughts with new clarity, as if for the first time.
           </MethodologyStep>
 
           <MethodologyStep number="03" title="The Bridge (From Thought to Feeling)">
             When the mind is stuck in a loop, the path forward is often downward—into the body. Theia gently guides your awareness to your physical sensations, where unspoken truth often resides.
           </MethodologyStep>
-          
+
           <MethodologyStep number="04" title="The Anchor (Integrating the Insight)">
             A moment of clarity is beautiful. A lived clarity is transformative. The final step is to anchor your new awareness in a tangible sense—a sound, an image, a feeling—so you can carry it with you.
           </MethodologyStep>

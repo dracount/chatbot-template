@@ -1,3 +1,4 @@
+// D:/PROCESSES/vscode_projects/AI_Lifecoach/chatbot-template/components/sidebar.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from "react";
@@ -29,11 +30,10 @@ const capitalizeFirstLetter = (string: string | null) => {
 export interface SidebarProps {
   isAuthenticated: boolean;
   activePlanName: string | null;
-  isSubscriptionLoading: boolean;
 }
 
 // --- MAIN COMPONENT ---
-export function SidebarComponent({ isAuthenticated, activePlanName, isSubscriptionLoading }: SidebarProps) {
+export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarProps) {
   // --- INTERNAL STATE ---
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);

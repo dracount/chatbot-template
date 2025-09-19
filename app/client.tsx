@@ -6,12 +6,10 @@
 import { SidebarComponent } from "@/components/sidebar";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { getSubscriptionDetails } from "@/app/actions";
-import { ArrowUpRight } from "lucide-react";
 import { CheckoutSuccessHandler } from "@/components/checkout-success-handler";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";

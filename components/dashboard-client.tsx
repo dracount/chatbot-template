@@ -1,6 +1,7 @@
+// D:/PROCESSES/vscode_projects/AI_Lifecoach/chatbot-template/components/dashboard-client.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,10 +40,10 @@ const Stone = ({ item, onRemove }: { item: GardenItem; onRemove: (id: string, ty
   const [isHovered, setIsHovered] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom'>('top');
-  
+
   const stoneRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  
+
   const stoneVariations = ['/stone-foundation.png', '/stone-river.png', '/stone-contemplation.png', '/stone-irregular.png'];
   const stoneImage = stoneVariations[item.variation];
 
@@ -63,12 +64,12 @@ const Stone = ({ item, onRemove }: { item: GardenItem; onRemove: (id: string, ty
       setContextMenu({ x: e.pageX, y: e.pageY });
     }
   };
-  
+
   const handleRemove = () => {
     onRemove(item.id, item.type);
     setContextMenu(null);
   };
-  
+
   useEffect(() => {
     const handleClickOutside = () => {
       if (contextMenu) setContextMenu(null);
@@ -114,7 +115,7 @@ const Stone = ({ item, onRemove }: { item: GardenItem; onRemove: (id: string, ty
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <AnimatePresence>
         {contextMenu && (
           <motion.div
@@ -132,7 +133,7 @@ const Stone = ({ item, onRemove }: { item: GardenItem; onRemove: (id: string, ty
       </AnimatePresence>
     </motion.div>
   );
-  
+
   return item.type === 'chat' ? (
     <Link href={`/c/${item.id}`} className="absolute" style={{ top: 0, left: 0 }}>{StoneComponent}</Link>
   ) : (
@@ -180,7 +181,7 @@ export function DashboardClient({ initialHistory, initialInsights }: DashboardCl
       for (let i = 0; i < MAX_PLACEMENT_ATTEMPTS; i++) {
         x = Math.random() * (gardenDimensions.width - STONE_WIDTH - PLACEMENT_PADDING * 2) + PLACEMENT_PADDING;
         y = Math.random() * (gardenDimensions.height - STONE_HEIGHT - PLACEMENT_PADDING * 2) + PLACEMENT_PADDING;
-        
+
         newStoneRect = new DOMRect(x, y, STONE_WIDTH, STONE_HEIGHT);
 
         let hasOverlap = false;
@@ -254,7 +255,7 @@ export function DashboardClient({ initialHistory, initialInsights }: DashboardCl
         {stones.map(item => (
           <Stone key={item.id} item={item} onRemove={handleRemoveStone} />
         ))}
-        
+
         <Link href="/welcome" className="absolute bottom-6 right-6 group">
           <motion.div
             className="relative w-40 h-40 md:w-48 md:h-48 transition-transform duration-300 ease-in-out group-hover:scale-105"

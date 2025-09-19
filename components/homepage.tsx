@@ -87,14 +87,14 @@ export function Homepage() {
           </Link>
         </motion.div>
       </div>
-      
+
       <section className="py-20 md:py-32 bg-white/50">
         <div className="max-w-2xl mx-auto text-center px-4">
           <h2 className="font-serif text-3xl md:text-4xl text-[#1a1a1a] mb-6">
             The Path
           </h2>
           <p className="text-lg text-[#333333] mb-8 leading-relaxed">
-            Theia, the voice of Clarity, doesn't provide answers. It reveals the path to your own. Through a gentle, guided conversation, it helps you journey from the noise of the mind to the wisdom of the body. From a feeling of being "unprepared" to the peace of a "quiet garden." This is not a quicker way to think. It is a slower way to know.
+            Theia, the voice of Clarity, doesn&apos;t provide answers. It reveals the path to your own. Through a gentle, guided conversation, it helps you journey from the noise of the mind to the wisdom of the body. From a feeling of being &quot;unprepared&quot; to the peace of a &quot;quiet garden.&quot; This is not a quicker way to think. It is a slower way to know.
           </p>
           <Link href="/how-it-works" className="inline-block bg-[#1a1a1a] text-white font-medium py-3 px-8 rounded-lg text-base transition-colors hover:bg-[#333333]">
             See the Methodology
