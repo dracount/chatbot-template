@@ -1,26 +1,29 @@
+// D:/PROCESSES/vscode_projects/AI_Lifecoach/chatbot-template/app/confirmation/page.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { Loader2 } from "lucide-react";
 
-export default function EmailConfirmation() {
+// The component with the actual logic is now separate.
+function ConfirmationContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const handleResendEmail = async () => {
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       const client = createSupabaseClient();
       const { error } = await client.auth.resend({
         type: 'signup',
         email,
       });
-      
+
       if (error) {
         setError(error.message);
       }
@@ -62,4 +65,17 @@ export default function EmailConfirmation() {
       </div>
     </div>
   );
-} 
+}
+
+// The default export is now a wrapper that provides the Suspense boundary.
+export default function EmailConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <ConfirmationContent />
+    </Suspense>
+  );
+}
