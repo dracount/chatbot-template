@@ -43,7 +43,7 @@ export default function PhilosophyPage() {
         <section className="text-center text-[#333333] bg-gray-50/70 p-8 rounded-lg">
            <h3 className="font-serif text-xl text-[#1a1a1a] mb-4">A Note on Our Origins</h3>
            <p className="italic">
-             Clarity was born from a question: "What if an AI could be trained not on information, but on the principles of presence?" It is an experiment in mindful technology—a quiet space in a noisy world.
+             Clarity was born from a question: &quot;What if an AI could be trained not on information, but on the principles of presence?&quot; It is an experiment in mindful technology—a quiet space in a noisy world.
            </p>
         </section>
 

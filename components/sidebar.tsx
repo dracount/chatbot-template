@@ -34,7 +34,8 @@ export interface SidebarProps {
 
 // --- MAIN COMPONENT ---
 export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarProps) {
-  // --- INTERNAL STATE ---
+    // ... component logic remains the same
+    // --- INTERNAL STATE ---
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
