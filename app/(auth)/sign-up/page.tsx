@@ -22,9 +22,13 @@ export default function SignUp() {
    */
   const handleGoogleSignUp = async () => {
     const supabase = createClient();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      });
+      options: {
+        redirectTo: `${origin}/auth/callback`,
+      },
+    });
 
     if (error) {
       console.error("Supabase OAuth Error:", error.message);

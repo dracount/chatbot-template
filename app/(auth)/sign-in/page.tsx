@@ -22,8 +22,12 @@ export default function SignIn() {
    */
   const handleGoogleSignIn = async () => {
     const supabase = createClient();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: {
+        redirectTo: `${origin}/auth/callback`,
+      },
     });
 
     if (error) {

@@ -265,13 +265,17 @@ export async function deleteChat(chatId: string): Promise<{ success: boolean; er
 
 export async function createChatSession(chatId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    console.log("[createChatSession LOG] Starting chat creation for ID:", chatId);
     const supabase = await createSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log("[createChatSession LOG] User fetch result:", { userId: user?.id, authError: authError?.message });
 
     if (authError || !user) {
+      console.error("[createChatSession LOG] User not authenticated:", authError);
       return { success: false, error: "User not authenticated." };
     }
 
+    console.log("[createChatSession LOG] Attempting to insert chat into DB for user:", user.id);
     const { error: insertError } = await supabase
       .from('chats')
       .insert({
@@ -281,14 +285,15 @@ export async function createChatSession(chatId: string): Promise<{ success: bool
       });
 
     if (insertError) {
-      console.error("Error creating new chat session:", insertError);
+      console.error("[createChatSession LOG] DB insert error details:", insertError);
       return { success: false, error: "Could not create a new chat session." };
     }
 
+    console.log("[createChatSession LOG] Chat session created successfully for:", chatId);
     return { success: true };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
-    console.error("Unexpected error in createChatSession:", errorMessage);
+    console.error("[createChatSession LOG] Unexpected error:", errorMessage);
     return { success: false, error: errorMessage };
   }
 }

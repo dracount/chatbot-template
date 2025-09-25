@@ -1,15 +1,25 @@
-// lib/supabase/client.ts
-
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isBrowser = typeof window !== 'undefined';
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('MISSING ENV VARS: Supabase URL or Anon Key is not defined in .env.local');
-  }
-  
-  // Create a supabase client on the browser with project's credentials
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  const supabaseUrl = 
+    isBrowser && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'
+      ? `${window.location.origin}/api/supabase`
+      : process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+  return createBrowserClient(
+    supabaseUrl,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      // This is the crucial part that was missing
+      cookieOptions: {
+        // The leading dot is important for it to work on subdomains (www)
+        domain: '.theiaseek.com', 
+        path: '/',
+        sameSite: 'lax',
+        secure: true
+      },
+    }
+  );
 }

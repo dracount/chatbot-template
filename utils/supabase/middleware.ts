@@ -33,11 +33,14 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const user = await supabase.auth.getUser();
-
-  if (request.nextUrl.pathname.startsWith("/protected") && user.error) {
+  console.log("[Middleware LOG] Fetching user for path:", request.nextUrl.pathname);
+  const { data: { user }, error } = await supabase.auth.getUser();
+  console.log("[Middleware LOG] User fetch result for", request.nextUrl.pathname, ":", { userId: user?.id, error: error?.message });
+  
+  if (request.nextUrl.pathname.startsWith("/protected") && error) {
+    console.log("[Middleware LOG] Redirecting to sign-in from protected path due to auth error.");
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
-
+  
   return supabaseResponse;
 }
