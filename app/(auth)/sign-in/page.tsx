@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Eye, AlertCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { createClient } from '@/lib/supabase/client'; // Import the Supabase client
+import { createBrowserClient } from '@supabase/ssr';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,18 +22,32 @@ export default function SignIn() {
    * Handles the Google Sign-In process.
    */
   const handleGoogleSignIn = async () => {
-    const supabase = createClient();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabase = createBrowserClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: {
+        storage: typeof window !== 'undefined' ? localStorage : undefined,
+        flowType: 'pkce',
+      },
+    });
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${origin}/auth/callback`,
       },
     });
 
+    console.log('[SignIn DEBUG] OAuth data:', data);
     if (error) {
       console.error("Supabase OAuth Error:", error.message);
       setErrorMessage(error.message);
+      return;
+    }
+
+    // Let signInWithOAuth handle the redirect automatically (internal storage and href)
+    console.log('[SignIn DEBUG] Initiating OAuth with automatic redirect');
+    if (data?.url) {
+      console.log('[SignIn DEBUG] OAuth URL:', data.url);
     }
   };
 
