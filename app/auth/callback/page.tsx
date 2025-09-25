@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createSupabaseClient } from '@/utils/supabase/client';
+import { createBrowserClient } from '@supabase/ssr';
 import { Session, AuthError } from '@supabase/supabase-js';
 
 export default function AuthCallback() {
@@ -23,7 +23,13 @@ export default function AuthCallback() {
 
     if (code) {
       console.log('[Callback Page LOG] Exchanging code for session...');
-      const supabase = createSupabaseClient();
+      // Use direct Supabase URL for PKCE exchange to access code_verifier properly (bypass proxy)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      console.log('[Callback Page LOG] Using Supabase URL for exchange:', supabaseUrl);
+      const supabase = createBrowserClient(
+        supabaseUrl,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
       supabase.auth.exchangeCodeForSession(code).then(({ data: { session }, error: exchangeError }: { data: { session: Session | null }, error: AuthError | null }) => {
         console.log('[Callback Page LOG] Exchange result:', {
