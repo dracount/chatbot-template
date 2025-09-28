@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { Eye, AlertCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from '@supabase/ssr';
-import { AuthError } from '@supabase/supabase-js';
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
