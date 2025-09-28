@@ -16,35 +16,31 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
-    // Correctly await the cookies() function to get the cookie store object
-    const cookieStore = await cookies(); 
+    const cookieStore = await cookies();
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          // Now that cookieStore is the resolved object, these sync functions will work
           get(name: string) {
             return cookieStore.get(name)?.value;
           },
-          // Use a try-catch for robustness, as recommended by Supabase SSR docs
           set(name: string, value: string, options) {
+            // Use a try-catch for robustness
             try {
               cookieStore.set({ name, value, ...options });
-            } catch (error) {
+            } catch (_error) { // <-- FIX #1: Renamed 'error' to '_error'
               // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // This can be ignored if you have middleware refreshing user sessions.
             }
           },
           remove(name: string, options) {
             try {
               cookieStore.delete({ name, ...options });
-            } catch (error) {
+            } catch (_error) { // <-- FIX #2: Renamed 'error' to '_error'
               // The `delete` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // This can be ignored if you have middleware refreshing user sessions.
             }
           },
         },
@@ -62,6 +58,5 @@ export async function GET(request: NextRequest) {
      return NextResponse.redirect(`${requestUrl.origin}/sign-in?error=missing_code`);
   }
 
-  // On successful exchange, redirect to the welcome page to set up the session.
   return NextResponse.redirect(`${requestUrl.origin}/welcome`);
 }
