@@ -22,12 +22,7 @@ export default function SignIn() {
    */
   const handleGoogleSignIn = async () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabase = createBrowserClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      auth: {
-        storage: typeof window !== 'undefined' ? localStorage : undefined,
-        flowType: 'pkce',
-      },
-    });
+    const supabase = createBrowserClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
