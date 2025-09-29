@@ -100,32 +100,3 @@ export async function DELETE(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   return proxyRequest(request);
 }
-
-interface CookieOptions {
-  secure?: boolean;
-  httpOnly?: boolean;
-  sameSite?: string;
-  path?: string;
-}
-
-function parseCookie(cookieStr: string): { name: string; value: string; options?: CookieOptions } {
-  const parts = cookieStr.split(';').map(part => part.trim());
-  const [nameValue] = parts;
-  const [name, value] = nameValue.split('=');
-  // Parse other attributes
-  const options: CookieOptions = {};
-  for (const part of parts.slice(1)) {
-    if (part.includes('Secure')) options.secure = true;
-    if (part.includes('HttpOnly')) options.httpOnly = true;
-    if (part.includes('SameSite')) {
-      const match = part.match(/SameSite=(.+)/);
-      options.sameSite = match ? match[1] : 'lax';
-    }
-    if (part.includes('Path')) {
-      const match = part.match(/Path=(.+)/);
-      options.path = match ? match[1] : '/';
-    }
-    // Max-Age etc.
-  }
-  return { name: name!, value, options };
-}
