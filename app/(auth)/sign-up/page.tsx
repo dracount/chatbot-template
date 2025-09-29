@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Eye, AlertCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { createClient } from '@/lib/supabase/client'; // Import the Supabase client
+import { createSupabaseClient } from '@/utils/supabase/client'; // Import the Supabase client
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ export default function SignUp() {
    * Handles the Google Sign-Up process.
    */
   const handleGoogleSignUp = async () => {
-    const supabase = createClient();
+    const supabase = createSupabaseClient();
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

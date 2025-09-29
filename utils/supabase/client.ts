@@ -12,8 +12,17 @@ export function createSupabaseClient() {
       ? `${window.location.origin}/api/supabase`
       : process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
+  const cookieOptions = {
+      name: 'sb-',
+      domain: isBrowser ? window.location.hostname : undefined,
+      path: '/',
+      sameSite: 'lax' as const,
+      secure: process.env.NODE_ENV === 'production'
+    };
+
   return createBrowserClient(
     supabaseUrl,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookieOptions }
   );
 }

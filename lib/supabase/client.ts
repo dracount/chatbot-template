@@ -1,4 +1,4 @@
-// In lib/supabase/client.ts
+// Deprecated: Use utils/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
 
 export function createClient() {
