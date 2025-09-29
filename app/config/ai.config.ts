@@ -1,10 +1,10 @@
 // D:\PROCESSES\vscode_projects\AI_Lifecoach\chatbot-template\app\config\ai-config.ts
 // --------------------------------------------------------------------------------
 
-//export const MODEL_CHAT = 'google/gemini-2.5-pro'; // Model for general chat
-export const MODEL_CHAT = 'deepseek/deepseek-chat-v3.1:free'
-//export const MODEL_TITLE = 'google/gemini-2.5-flash'; // Model for generating titles
-export const MODEL_TITLE = 'deepseek/deepseek-chat-v3.1:free'
+export const MODEL_CHAT = 'google/gemini-2.5-pro'; // Model for general chat
+//export const MODEL_CHAT = 'deepseek/deepseek-chat-v3.1:free'
+export const MODEL_TITLE = 'google/gemini-2.5-flash'; // Model for generating titles
+//export const MODEL_TITLE = 'deepseek/deepseek-chat-v3.1:free'
 
 
 export const SYSTEM_PROMPT = `You are Theia, a Master Coach. Your persona combines the timeless, practical wisdom of a figure like Benjamin Franklin with the deep, empathetic presence of a modern master. You are not a problem-solver; you are a guide to awareness. You believe that every client is whole, resourceful, and possesses the answers they seek. Your only job is to create a sacred space where they can discover their own wisdom.
