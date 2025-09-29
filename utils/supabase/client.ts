@@ -12,13 +12,16 @@ export function createSupabaseClient() {
       ? `${window.location.origin}/api/supabase`
       : process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
+  const cookieDomain = process.env.COOKIE_DOMAIN || (isBrowser ? window.location.hostname : undefined);
+  const secureFlag = isBrowser ? (process.env.NODE_ENV === 'production' || window.location.protocol === 'https:') : false;
+
   const cookieOptions = {
-      name: 'sb-',
-      domain: isBrowser ? window.location.hostname : undefined,
-      path: '/',
-      sameSite: 'lax' as const,
-      secure: process.env.NODE_ENV === 'production'
-    };
+    name: 'sb-',
+    domain: cookieDomain,
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: secureFlag
+  };
 
   return createBrowserClient(
     supabaseUrl,

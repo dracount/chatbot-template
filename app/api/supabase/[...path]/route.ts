@@ -27,7 +27,7 @@ async function proxyRequest(request: NextRequest) {
     redirect: 'manual',
   });
 
-  // Create Next.js response
+  // Create Next.js response based on content type
   const contentType = response.headers.get('content-type');
   let data;
   if (contentType?.includes('application/json')) {
@@ -38,31 +38,31 @@ async function proxyRequest(request: NextRequest) {
     data = await response.blob();
   }
 
-  const nextResponse = NextResponse.json(data, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+  let nextResponse;
+  if (contentType?.includes('application/json')) {
+    nextResponse = NextResponse.json(data, { status: response.status });
+  } else if (contentType?.includes('text/')) {
+    nextResponse = new NextResponse(data, { status: response.status, headers: { 'Content-Type': contentType! } });
+  } else {
+    nextResponse = new NextResponse(data, { status: response.status });
+  }
 
-  // Forward cookies for auth
+  // Forward headers, including Set-Cookie directly
   response.headers.forEach((value, key) => {
-    if (key.toLowerCase() === 'set-cookie') {
-      // Parse and set cookie
-      const cookie = parseCookie(value);
-      nextResponse.cookies.set(cookie.name, cookie.value, {
-        domain: request.cookies.get('__Host-next-router-state-tree')?.domain || '.localhost', // Adjust for domain
-        path: cookie.path || '/',
-        secure: cookie.secure,
-        httpOnly: cookie.httpOnly,
-        sameSite: cookie.sameSite || 'lax',
-        maxAge: cookie.maxAge || 60 * 60 * 24 * 7, // 7 days default
-      });
+    const lowerKey = key.toLowerCase();
+    if (lowerKey === 'set-cookie') {
+      const setCookieValues = value;
+      const cookies = Array.isArray(setCookieValues) ? setCookieValues : [setCookieValues];
+      cookies.forEach(cookie => nextResponse.headers.append('set-cookie', cookie));
+    } else if (!['content-length', 'content-encoding', 'transfer-encoding', 'connection', 'host'].includes(lowerKey)) {
+      nextResponse.headers.set(key, value);
     }
   });
+
+  // CORS headers for safety
+  nextResponse.headers.set('Access-Control-Allow-Origin', '*');
+  nextResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  nextResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   return nextResponse;
 }

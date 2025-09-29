@@ -14,9 +14,15 @@ export async function createSupabaseClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const enhancedOptions = {
+                ...options,
+                domain: process.env.COOKIE_DOMAIN || options?.domain,
+                secure: process.env.NODE_ENV === 'production' || options?.secure,
+                sameSite: options?.sameSite || 'lax',
+              };
+              cookieStore.set(name, value, enhancedOptions);
+            });
           } catch {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
