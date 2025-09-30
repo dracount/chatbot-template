@@ -5,7 +5,7 @@ import { SidebarComponent } from "@/components/sidebar";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect, Suspense } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { getSubscriptionDetails } from "@/app/actions";
 import { CheckoutSuccessHandler } from "@/components/checkout-success-handler";
@@ -29,7 +29,6 @@ const Footer = () => {
 // This component contains the hooks that need to be suspended.
 function ClientLayoutContent({ children }: ClientLayoutProps) {
   const { isAuthenticated } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const [activePlanName, setActivePlanName] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -37,7 +36,7 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
   useEffect(() => {
     // Close sidebar on navigation
     setIsSidebarOpen(false);
- 
+
     const fetchSubscriptionStatus = async () => {
       if (isAuthenticated) {
         try {
@@ -95,7 +94,7 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
             onClose={() => setIsSidebarOpen(false)}
           />
         </div>
- 
+
         {/* --- MAIN CONTENT --- */}
         <main className={cn("flex-1 overflow-hidden transition-all duration-300", isChatPage && "starfield-background")}>
           <div className="h-full w-full overflow-y-auto relative">
