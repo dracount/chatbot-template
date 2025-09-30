@@ -30,10 +30,11 @@ const capitalizeFirstLetter = (string: string | null) => {
 export interface SidebarProps {
   isAuthenticated: boolean;
   activePlanName: string | null;
+  onClose?: () => void;
 }
 
 // --- MAIN COMPONENT ---
-export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarProps) {
+export function SidebarComponent({ isAuthenticated, activePlanName, onClose }: SidebarProps) {
     // ... component logic remains the same
     // --- INTERNAL STATE ---
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -66,6 +67,7 @@ export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarPro
       setChatHistory(updatedHistory);
       toast.dismiss(); // Remove the "loading" toast
       router.push(`/c/${newChatId}`);
+      onClose?.();
     } else {
       console.error("Failed to create new chat session:", result.error);
       toast.error("Could not create new observation.", {
@@ -131,6 +133,7 @@ export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarPro
     await createSupabaseClient().auth.signOut();
     router.push('/sign-in');
     router.refresh();
+    onClose?.();
   };
 
   const handleDeleteChat = async () => {
@@ -213,7 +216,7 @@ export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarPro
             <Plus className="h-4 w-4" />
             {!isCollapsed && <span className="flex-1 text-left">New Path</span>}
           </Button>
-          <Button variant="ghost" className="w-full justify-center gap-2 hover:bg-zinc-800 hover:text-zinc-50 mt-1" onClick={() => router.push('/dashboard')}>
+          <Button variant="ghost" className="w-full justify-center gap-2 hover:bg-zinc-800 hover:text-zinc-50 mt-1" onClick={() => { router.push('/dashboard'); onClose?.(); }}>
             <Star className="h-4 w-4" />
             {!isCollapsed && <span className="flex-1 text-left">Star Chart</span>}
           </Button>
@@ -226,7 +229,7 @@ export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarPro
           {isCollapsed ? (
             <div className="space-y-2">
               {chatHistory.map(chat => (
-                <Button key={chat.id} variant="ghost" size="icon" className="w-full rounded-lg hover:bg-zinc-800" onClick={() => router.push(`/c/${chat.id}`)}>
+                <Button key={chat.id} variant="ghost" size="icon" className="w-full rounded-lg hover:bg-zinc-800" onClick={() => { router.push(`/c/${chat.id}`); onClose?.(); }}>
                   <span>{chat.title.charAt(0).toUpperCase()}</span>
                 </Button>
               ))}
@@ -252,7 +255,7 @@ export function SidebarComponent({ isAuthenticated, activePlanName }: SidebarPro
                         className="h-9 flex-1 bg-transparent px-3 text-sm text-white focus:outline-none"
                       />
                     ) : (
-                      <Button variant="ghost" className="h-auto flex-1 justify-start truncate py-2 text-zinc-400 hover:bg-transparent hover:text-zinc-50" onClick={() => router.push(`/c/${chat.id}`)}>
+                      <Button variant="ghost" className="h-auto flex-1 justify-start truncate py-2 text-zinc-400 hover:bg-transparent hover:text-zinc-50" onClick={() => { router.push(`/c/${chat.id}`); onClose?.(); }}>
                         {chat.title}
                       </Button>
                     )}

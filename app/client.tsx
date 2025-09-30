@@ -5,13 +5,13 @@ import { SidebarComponent } from "@/components/sidebar";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect, Suspense } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSubscriptionDetails } from "@/app/actions";
 import { CheckoutSuccessHandler } from "@/components/checkout-success-handler";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, MenuIcon, XIcon } from "lucide-react";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -29,10 +29,15 @@ const Footer = () => {
 // This component contains the hooks that need to be suspended.
 function ClientLayoutContent({ children }: ClientLayoutProps) {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
   const [activePlanName, setActivePlanName] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
+    // Close sidebar on navigation
+    setIsSidebarOpen(false);
+ 
     const fetchSubscriptionStatus = async () => {
       if (isAuthenticated) {
         try {
@@ -44,7 +49,7 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
       }
     };
     fetchSubscriptionStatus();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, pathname]);
 
   const isFullScreenPage =
     pathname === '/' ||
@@ -78,14 +83,31 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
     >
       <CheckoutSuccessHandler />
       <Toaster richColors />
-      <div className="flex h-screen w-screen">
-        <SidebarComponent
-          isAuthenticated={isAuthenticated}
-          activePlanName={activePlanName}
-        />
-        <main className={cn("flex-1 overflow-hidden", isChatPage && "starfield-background")}>
-          <div className="h-full w-full overflow-y-auto">
-            {children}
+      <div className="flex h-screen w-screen overflow-hidden">
+        {/* --- RESPONSIVE SIDEBAR --- */}
+        <div className={cn(
+          "absolute md:relative z-50 md:z-auto h-full transition-transform duration-300 ease-in-out",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}>
+          <SidebarComponent
+            isAuthenticated={isAuthenticated}
+            activePlanName={activePlanName}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        </div>
+ 
+        {/* --- MAIN CONTENT --- */}
+        <main className={cn("flex-1 overflow-hidden transition-all duration-300", isChatPage && "starfield-background")}>
+          <div className="h-full w-full overflow-y-auto relative">
+            {/* --- HAMBURGER MENU BUTTON FOR MOBILE --- */}
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="md:hidden fixed top-4 left-4 z-40 p-2 bg-background/50 backdrop-blur-sm rounded-md border"
+              aria-label="Toggle menu"
+            >
+              {isSidebarOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            </button>
+             {children}
           </div>
         </main>
       </div>

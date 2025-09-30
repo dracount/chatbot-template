@@ -44,7 +44,8 @@ const MessageLine = ({ message }: { message: Message }) => {
     )}>
       <div
         className={cn(
-          "max-w-2xl text-base whitespace-pre-wrap leading-relaxed",
+          // --- MODIFICATION: Responsive text size ---
+          "max-w-2xl text-sm sm:text-base whitespace-pre-wrap leading-relaxed",
           isUser ? "text-right text-[#1a1a1a] font-medium" : "text-left text-[#333333]"
         )}
       >
@@ -170,9 +171,12 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    // --- MODIFICATION: Main container for responsive chat layout ---
+    <div className="flex h-full w-full flex-col bg-stone-50/50">
+      {/* --- MODIFICATION: Scrollable message area --- */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-12 space-y-4">
+        {/* --- MODIFICATION: Responsive padding that accounts for the sticky input bar --- */}
+        <div className="max-w-3xl mx-auto px-4 pt-6 pb-24 sm:pt-12 sm:pb-32 space-y-4">
           {isLoadingMessages ? (
             <div className="flex justify-center pt-10"><Loader2 className="h-8 w-8 text-[#333333] animate-spin" /></div>
           ) : messageError ? (
@@ -212,10 +216,10 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0 pt-4">
-        <div className="max-w-3xl mx-auto px-4 pb-8">
-          <div className="flex items-end gap-4">
+      {/* --- MODIFICATION: Sticky Input Area --- */}
+      <div className="flex-shrink-0 sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-stone-200">
+        <div className="max-w-3xl mx-auto p-4">
+          <div className="flex items-end gap-2 sm:gap-4">
             <textarea
               ref={textareaRef}
               className="flex-1 resize-none text-base text-[#1a1a1a] placeholder:text-gray-400 bg-transparent focus:outline-none border-b-2 border-gray-300 focus:border-[#1a1a1a] p-2 transition-colors duration-300"
@@ -232,7 +236,8 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
               disabled={!prompt.trim() || isTheiaResponding}
               aria-label="Send"
             >
-              <div className="relative w-12 h-12">
+              {/* --- MODIFICATION: Responsive button size --- */}
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12">
                  <Image src="/cta.png" alt="Send" fill style={{ objectFit: 'contain' }} />
               </div>
             </button>

@@ -25,7 +25,12 @@ export const metadata: Metadata = {
   
   // This links the web app manifest file.
   manifest: '/site.webmanifest',
-};
+  // --- ADDED FOR MOBILE RESPONSIVENESS ---
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+  },
+ };
 
 export default function RootLayout({
   children,
