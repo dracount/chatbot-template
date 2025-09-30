@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { getMessagesForChat, addMessage, getOpenRouterResponse, addInsightAction, generateAndUpdateChatTitle  } from '@/app/actions';
+// --- MODIFICATION: Imported new server actions ---
+import { getMessagesForChat, addMessage, getOpenRouterResponse, addInsightAction, generateAndUpdateChatTitle, checkFirstSessionStatus, markFirstSessionCompleted  } from '@/app/actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { toast } from "sonner";
@@ -24,8 +25,8 @@ interface ChatInterfaceProps {
   chatId: string;
 }
 
-// --- TUTORIAL CONTENT AND SUB-COMPONENT ---
-const TUTORIAL_MESSAGES = [
+// --- MODIFICATION: Tutorial and Welcome content separated ---
+const FIRST_SESSION_TUTORIAL = [
   {
     id: 'tut-1',
     content: "Welcome to your first session. This is a brief tutorial to help you get started.\n\nYou can click the send button to continue to the next step, or simply type your thoughts and send them to begin your coaching session at any time."
@@ -44,7 +45,13 @@ const TUTORIAL_MESSAGES = [
   }
 ];
 
-const TutorialMessageLine = ({ message }: { message: { id: string; content: string } }) => (
+const NEW_SESSION_WELCOME = {
+  id: 'welcome-back-1',
+  content: "Welcome back. A new path awaits. What would you like to explore in this session?"
+};
+
+
+const WelcomeMessageLine = ({ message }: { message: { id: string; content: string } }) => (
   <div className="group w-full flex items-start gap-4 py-2 justify-start">
     <div className="max-w-2xl text-sm sm:text-base whitespace-pre-wrap leading-relaxed text-left text-[#333333]">
       <AnimatedResponseMessage content={message.content} />
@@ -52,8 +59,6 @@ const TutorialMessageLine = ({ message }: { message: { id: string; content: stri
   </div>
 );
 
-
-// --- SUB-COMPONENTS ---
 
 // The Message component, styled like a script
 const MessageLine = ({ message }: { message: Message }) => {
@@ -109,10 +114,13 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   const [isTheiaResponding, setIsTheiaResponding] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [messageError, setMessageError] = useState<string | null>(null);
-  
-  // --- MODIFICATION: State for interactive tutorial ---
+
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+  
+  // --- MODIFICATION: New state to manage session type ---
+  const [isFirstSessionEver, setIsFirstSessionEver] = useState(false);
+  const [sessionTypeChecked, setSessionTypeChecked] = useState(false);
 
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -121,17 +129,23 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   useEffect(() => {
     let isMounted = true;
     setIsLoadingMessages(true);
+    setSessionTypeChecked(false); // Reset on each chat load
+
     getMessagesForChat(chatId)
-      .then(fetchedMessages => {
+      .then(async (fetchedMessages) => {
         if (isMounted) {
           setMessages(fetchedMessages.map(m => ({ ...m, sender: m.sender === 'ai' ? 'theia' : 'user' })));
-          // --- MODIFICATION: Activate tutorial if chat is empty ---
+          
           if (fetchedMessages.length === 0) {
+            // --- MODIFICATION: Check session status for empty chats ---
+            const isFirst = !(await checkFirstSessionStatus());
+            setIsFirstSessionEver(isFirst);
             setIsTutorialActive(true);
             setTutorialStep(0);
           } else {
             setIsTutorialActive(false);
           }
+          setSessionTypeChecked(true); // Mark that we have determined the session type
         }
       })
       .catch(error => {
@@ -149,20 +163,29 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   }, [messages, isTheiaResponding, tutorialStep]);
 
   const handleSubmit = async () => {
-    // --- MODIFICATION: Handle tutorial interaction ---
     const currentPrompt = prompt.trim();
+
     if (isTutorialActive) {
       if (currentPrompt) {
-        // User is skipping tutorial and starting the chat
+        // User typed something, so they are starting the session.
         setIsTutorialActive(false);
-      } else {
-        // User is continuing the tutorial
-        if (tutorialStep < TUTORIAL_MESSAGES.length - 1) {
+        // --- MODIFICATION: Mark first session as completed if it was their first time ---
+        if (isFirstSessionEver) {
+          markFirstSessionCompleted();
+        }
+      } else if (isFirstSessionEver) {
+        // User clicked send without typing, and it's the full tutorial.
+        if (tutorialStep < FIRST_SESSION_TUTORIAL.length - 1) {
           setTutorialStep(prev => prev + 1);
         }
-        return; // Stop execution to prevent sending an empty message
+        return; // Stop to prevent sending an empty message.
+      } else {
+        // User clicked send on the "Welcome Back" message.
+        // The prompt is empty, so we do nothing.
+        return;
       }
     }
+
 
     if (!currentPrompt || isTheiaResponding) return;
 
@@ -222,15 +245,20 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
       {/* Scrollable message container */}
       <div className="h-full overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 pt-6 pb-28 sm:pt-12 sm:pb-32 space-y-4">
-          {isLoadingMessages ? (
+          {/* --- MODIFICATION: Show loader until session type is checked --- */}
+          {isLoadingMessages || !sessionTypeChecked ? (
             <div className="flex justify-center pt-10"><Loader2 className="h-8 w-8 text-[#333333] animate-spin" /></div>
           ) : messageError ? (
             <div className="text-center text-[#bc4747]">{messageError}</div>
-          // --- MODIFICATION: Render interactive tutorial or messages ---
+          // --- MODIFICATION: Conditionally render tutorial or welcome message ---
           ) : isTutorialActive ? (
-            TUTORIAL_MESSAGES.slice(0, tutorialStep + 1).map((msg) => (
-              <TutorialMessageLine key={msg.id} message={msg} />
-            ))
+            isFirstSessionEver ? (
+              FIRST_SESSION_TUTORIAL.slice(0, tutorialStep + 1).map((msg) => (
+                <WelcomeMessageLine key={msg.id} message={msg} />
+              ))
+            ) : (
+              <WelcomeMessageLine message={NEW_SESSION_WELCOME} />
+            )
           ) : (
             messages.map((msg) => <MessageLine key={msg.id} message={msg} />)
           )}
@@ -273,10 +301,9 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
             <textarea
               ref={textareaRef}
               className="flex-1 resize-none text-base text-[#1a1a1a] placeholder:text-gray-400 bg-transparent focus:outline-none border-b-2 border-gray-300 focus:border-[#1a1a1a] p-2 transition-colors duration-300"
-              // --- MODIFICATION: Dynamic placeholder text ---
               placeholder={
-                isTutorialActive
-                  ? "Type here to begin coaching, or click send to continue the tutorial..."
+                isTutorialActive && isFirstSessionEver
+                  ? "Type here to begin, or click send to continue the tutorial..."
                   : "Your thoughts..."
               }
               value={prompt}
@@ -288,10 +315,12 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
             <button
               className="group transition-transform duration-300 ease-in-out hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
               onClick={handleSubmit}
-              // --- MODIFICATION: Disable button if tutorial is finished and prompt is empty ---
               disabled={
                 isTheiaResponding ||
-                (isTutorialActive && !prompt.trim() && tutorialStep >= TUTORIAL_MESSAGES.length - 1)
+                // Disable if tutorial is finished and prompt is empty
+                (isTutorialActive && isFirstSessionEver && !prompt.trim() && tutorialStep >= FIRST_SESSION_TUTORIAL.length - 1) ||
+                // Disable on welcome back message if prompt is empty
+                (isTutorialActive && !isFirstSessionEver && !prompt.trim())
               }
               aria-label="Send"
             >

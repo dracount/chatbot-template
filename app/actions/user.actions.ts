@@ -1,3 +1,4 @@
+// D:/PROCESSES/vscode_projects/AI_Lifecoach/chatbot-template/app/actions/user.actions.ts
 "use server";
 
 import { createSupabaseClient } from "@/utils/supabase/server";
@@ -185,4 +186,51 @@ export async function getUserPlan(): Promise<string | null> {
     console.error("Unexpected error in getUserPlan:", errorMessage);
     return 'free';
   }
+}
+
+// --- MODIFICATION: New function to check user's first session status ---
+export async function checkFirstSessionStatus(): Promise<boolean> {
+  const supabase = await createSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    // Default to 'true' (not first session) for guests to prevent tutorial from showing
+    return true;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('has_completed_first_session')
+    .eq('id', user.id)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error("Error fetching first session status:", error);
+    // Default to 'false' (is first session) to be safe, ensuring new users see the tutorial
+    return false;
+  }
+
+  return data?.has_completed_first_session || false;
+}
+
+// --- MODIFICATION: New function to mark the first session as completed ---
+export async function markFirstSessionCompleted(): Promise<{ success: boolean }> {
+  const supabase = await createSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ has_completed_first_session: true })
+    .eq('id', user.id);
+
+  if (error) {
+    console.error("Error marking first session as completed:", error);
+    return { success: false };
+  }
+
+  return { success: true };
 }
