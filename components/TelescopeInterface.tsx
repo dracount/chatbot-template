@@ -115,7 +115,7 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
 
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-
+  
   const [isFirstSessionEver, setIsFirstSessionEver] = useState(false);
   const [sessionTypeChecked, setSessionTypeChecked] = useState(false);
 
@@ -128,32 +128,24 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
     setIsLoadingMessages(true);
     setSessionTypeChecked(false);
 
-    // --- MODIFICATION: Added logging ---
-    console.log(`[CLIENT LOG] Chat interface mounted for chatId: ${chatId}. Fetching messages...`);
-
     getMessagesForChat(chatId)
       .then(async (fetchedMessages) => {
         if (isMounted) {
           setMessages(fetchedMessages.map(m => ({ ...m, sender: m.sender === 'ai' ? 'theia' : 'user' })));
           
           if (fetchedMessages.length === 0) {
-            // --- MODIFICATION: Added logging ---
-            console.log("[CLIENT LOG] This is an empty chat. Checking session status...");
             const hasCompletedBefore = await checkFirstSessionStatus();
-            const isFirst = !hasCompletedBefore;
-            console.log(`[CLIENT LOG] Server check complete. Is this the user's first session ever? ${isFirst}`);
-            setIsFirstSessionEver(isFirst);
+            setIsFirstSessionEver(!hasCompletedBefore);
             setIsTutorialActive(true);
             setTutorialStep(0);
           } else {
-            console.log(`[CLIENT LOG] Chat has ${fetchedMessages.length} messages. Deactivating tutorial.`);
             setIsTutorialActive(false);
           }
           setSessionTypeChecked(true);
         }
       })
       .catch(error => {
-        console.error("[CLIENT ERROR] Failed to fetch messages:", error);
+        console.error("Failed to fetch messages:", error);
         if (isMounted) setMessageError("Could not load this conversation.");
       })
       .finally(() => {
@@ -171,22 +163,15 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
 
     if (isTutorialActive) {
       if (currentPrompt) {
-        // --- MODIFICATION: Added logging ---
-        console.log("[CLIENT LOG] User typed in the tutorial view. Skipping tutorial and starting session.");
         setIsTutorialActive(false);
         if (isFirstSessionEver) {
-          // --- MODIFICATION: Added logging ---
-          console.log("[CLIENT LOG] This was the first session. Calling markFirstSessionCompleted now...");
-          const result = await markFirstSessionCompleted();
-          console.log(`[CLIENT LOG] 'markFirstSessionCompleted' call finished. Success: ${result.success}`);
+          markFirstSessionCompleted();
         }
       } else if (isFirstSessionEver) {
-        // --- MODIFICATION: Added logging ---
-        console.log("[CLIENT LOG] User clicked 'send' to advance tutorial.");
         if (tutorialStep < FIRST_SESSION_TUTORIAL.length - 1) {
           setTutorialStep(prev => prev + 1);
         }
-        return; 
+        return;
       } else {
         return;
       }
