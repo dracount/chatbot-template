@@ -86,7 +86,7 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
       <div className="flex h-screen w-screen overflow-hidden">
         {/* --- RESPONSIVE SIDEBAR --- */}
         <div className={cn(
-          "absolute md:relative z-50 md:z-auto h-full transition-transform duration-300 ease-in-out",
+          "fixed md:relative z-50 md:z-auto h-full top-0 left-0 transition-transform duration-300 ease-in-out",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
           <SidebarComponent
@@ -98,7 +98,7 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
 
         {/* --- MAIN CONTENT --- */}
         <main className={cn("flex-1 overflow-hidden transition-all duration-300", isChatPage && "starfield-background")}>
-          <div className="h-full w-full overflow-y-auto relative">
+          <div className={cn("h-full w-full overflow-y-auto relative", isSidebarOpen && "md:overflow-y-auto overflow-y-hidden")}>
             {/* --- HAMBURGER MENU BUTTON FOR MOBILE --- */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
