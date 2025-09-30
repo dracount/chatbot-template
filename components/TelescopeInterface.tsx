@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-// --- MODIFICATION: Imported new server actions ---
 import { getMessagesForChat, addMessage, getOpenRouterResponse, addInsightAction, generateAndUpdateChatTitle, checkFirstSessionStatus, markFirstSessionCompleted  } from '@/app/actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -25,7 +24,6 @@ interface ChatInterfaceProps {
   chatId: string;
 }
 
-// --- MODIFICATION: Tutorial and Welcome content separated ---
 const FIRST_SESSION_TUTORIAL = [
   {
     id: 'tut-1',
@@ -117,8 +115,7 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
 
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  
-  // --- MODIFICATION: New state to manage session type ---
+
   const [isFirstSessionEver, setIsFirstSessionEver] = useState(false);
   const [sessionTypeChecked, setSessionTypeChecked] = useState(false);
 
@@ -129,7 +126,10 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   useEffect(() => {
     let isMounted = true;
     setIsLoadingMessages(true);
-    setSessionTypeChecked(false); // Reset on each chat load
+    setSessionTypeChecked(false);
+
+    // --- MODIFICATION: Added logging ---
+    console.log(`[CLIENT LOG] Chat interface mounted for chatId: ${chatId}. Fetching messages...`);
 
     getMessagesForChat(chatId)
       .then(async (fetchedMessages) => {
@@ -137,19 +137,23 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
           setMessages(fetchedMessages.map(m => ({ ...m, sender: m.sender === 'ai' ? 'theia' : 'user' })));
           
           if (fetchedMessages.length === 0) {
-            // --- MODIFICATION: Check session status for empty chats ---
-            const isFirst = !(await checkFirstSessionStatus());
+            // --- MODIFICATION: Added logging ---
+            console.log("[CLIENT LOG] This is an empty chat. Checking session status...");
+            const hasCompletedBefore = await checkFirstSessionStatus();
+            const isFirst = !hasCompletedBefore;
+            console.log(`[CLIENT LOG] Server check complete. Is this the user's first session ever? ${isFirst}`);
             setIsFirstSessionEver(isFirst);
             setIsTutorialActive(true);
             setTutorialStep(0);
           } else {
+            console.log(`[CLIENT LOG] Chat has ${fetchedMessages.length} messages. Deactivating tutorial.`);
             setIsTutorialActive(false);
           }
-          setSessionTypeChecked(true); // Mark that we have determined the session type
+          setSessionTypeChecked(true);
         }
       })
       .catch(error => {
-        console.error("Failed to fetch messages:", error);
+        console.error("[CLIENT ERROR] Failed to fetch messages:", error);
         if (isMounted) setMessageError("Could not load this conversation.");
       })
       .finally(() => {
@@ -167,21 +171,23 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
 
     if (isTutorialActive) {
       if (currentPrompt) {
-        // User typed something, so they are starting the session.
+        // --- MODIFICATION: Added logging ---
+        console.log("[CLIENT LOG] User typed in the tutorial view. Skipping tutorial and starting session.");
         setIsTutorialActive(false);
-        // --- MODIFICATION: Mark first session as completed if it was their first time ---
         if (isFirstSessionEver) {
-          markFirstSessionCompleted();
+          // --- MODIFICATION: Added logging ---
+          console.log("[CLIENT LOG] This was the first session. Calling markFirstSessionCompleted now...");
+          const result = await markFirstSessionCompleted();
+          console.log(`[CLIENT LOG] 'markFirstSessionCompleted' call finished. Success: ${result.success}`);
         }
       } else if (isFirstSessionEver) {
-        // User clicked send without typing, and it's the full tutorial.
+        // --- MODIFICATION: Added logging ---
+        console.log("[CLIENT LOG] User clicked 'send' to advance tutorial.");
         if (tutorialStep < FIRST_SESSION_TUTORIAL.length - 1) {
           setTutorialStep(prev => prev + 1);
         }
-        return; // Stop to prevent sending an empty message.
+        return; 
       } else {
-        // User clicked send on the "Welcome Back" message.
-        // The prompt is empty, so we do nothing.
         return;
       }
     }
@@ -245,12 +251,10 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
       {/* Scrollable message container */}
       <div className="h-full overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 pt-6 pb-28 sm:pt-12 sm:pb-32 space-y-4">
-          {/* --- MODIFICATION: Show loader until session type is checked --- */}
           {isLoadingMessages || !sessionTypeChecked ? (
             <div className="flex justify-center pt-10"><Loader2 className="h-8 w-8 text-[#333333] animate-spin" /></div>
           ) : messageError ? (
             <div className="text-center text-[#bc4747]">{messageError}</div>
-          // --- MODIFICATION: Conditionally render tutorial or welcome message ---
           ) : isTutorialActive ? (
             isFirstSessionEver ? (
               FIRST_SESSION_TUTORIAL.slice(0, tutorialStep + 1).map((msg) => (
@@ -317,9 +321,7 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
               onClick={handleSubmit}
               disabled={
                 isTheiaResponding ||
-                // Disable if tutorial is finished and prompt is empty
                 (isTutorialActive && isFirstSessionEver && !prompt.trim() && tutorialStep >= FIRST_SESSION_TUTORIAL.length - 1) ||
-                // Disable on welcome back message if prompt is empty
                 (isTutorialActive && !isFirstSessionEver && !prompt.trim())
               }
               aria-label="Send"

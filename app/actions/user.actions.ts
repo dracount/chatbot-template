@@ -188,15 +188,17 @@ export async function getUserPlan(): Promise<string | null> {
   }
 }
 
-// --- MODIFICATION: New function to check user's first session status ---
+// --- MODIFICATION: Added detailed logging ---
 export async function checkFirstSessionStatus(): Promise<boolean> {
+  console.log("[SERVER ACTION LOG] Running checkFirstSessionStatus...");
   const supabase = await createSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // Default to 'true' (not first session) for guests to prevent tutorial from showing
+    console.log("[SERVER ACTION LOG] No user is authenticated. Returning 'true' (not first session).");
     return true;
   }
+  console.log(`[SERVER ACTION LOG] Checking status for user: ${user.id}`);
 
   const { data, error } = await supabase
     .from('profiles')
@@ -205,22 +207,26 @@ export async function checkFirstSessionStatus(): Promise<boolean> {
     .single();
 
   if (error && error.code !== 'PGRST116') {
-    console.error("Error fetching first session status:", error);
-    // Default to 'false' (is first session) to be safe, ensuring new users see the tutorial
+    console.error("[SERVER ACTION ERROR] Error fetching first session status:", error);
     return false;
   }
 
-  return data?.has_completed_first_session || false;
+  const hasCompleted = data?.has_completed_first_session || false;
+  console.log(`[SERVER ACTION LOG] Fetched status for user ${user.id}. Has completed first session: ${hasCompleted}.`);
+  return hasCompleted;
 }
 
-// --- MODIFICATION: New function to mark the first session as completed ---
+// --- MODIFICATION: Added detailed logging ---
 export async function markFirstSessionCompleted(): Promise<{ success: boolean }> {
+  console.log("[SERVER ACTION LOG] Running markFirstSessionCompleted...");
   const supabase = await createSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
+    console.error("[SERVER ACTION ERROR] Cannot mark session completed: No user is authenticated.");
     return { success: false };
   }
+  console.log(`[SERVER ACTION LOG] Attempting to mark session as completed for user: ${user.id}`);
 
   const { error } = await supabase
     .from('profiles')
@@ -228,9 +234,10 @@ export async function markFirstSessionCompleted(): Promise<{ success: boolean }>
     .eq('id', user.id);
 
   if (error) {
-    console.error("Error marking first session as completed:", error);
+    console.error(`[SERVER ACTION ERROR] Failed to update profile for user ${user.id}. RLS policy might be missing or incorrect for the 'authenticated' role.`, error);
     return { success: false };
   }
 
+  console.log(`[SERVER ACTION LOG] Successfully updated profile for user ${user.id}. 'has_completed_first_session' is now true.`);
   return { success: true };
 }
