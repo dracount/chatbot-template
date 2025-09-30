@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { toast } from "sonner";
 import { AnimatedResponseMessage } from '@/components/animated-response-message';
+import { Tutorial } from '@/components/Tutorial'; // Import the new component
 import { MODEL_CHAT } from '@/app/config/ai.config';
 
 // --- TYPES ---
@@ -169,6 +170,8 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
             <div className="flex justify-center pt-10"><Loader2 className="h-8 w-8 text-[#333333] animate-spin" /></div>
           ) : messageError ? (
             <div className="text-center text-[#bc4747]">{messageError}</div>
+          ) : messages.length === 0 ? (
+            <Tutorial /> // MODIFICATION: Show tutorial if there are no messages
           ) : (
             messages.map((msg) => <MessageLine key={msg.id} message={msg} />)
           )}
