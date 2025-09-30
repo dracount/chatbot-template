@@ -44,21 +44,16 @@ const MessageLine = ({ message }: { message: Message }) => {
     )}>
       <div
         className={cn(
-          // --- MODIFICATION: Responsive text size ---
           "max-w-2xl text-sm sm:text-base whitespace-pre-wrap leading-relaxed",
           isUser ? "text-right text-[#1a1a1a] font-medium" : "text-left text-[#333333]"
         )}
       >
         {isUser ? (
-          // User messages are rendered normally
           message.content
         ) : (
-          // Theia's messages use the animation component
           <AnimatedResponseMessage content={message.content} />
         )}
       </div>
-
-      {/* Save Icon (Brushstroke) - appears on hover for Theia's messages */}
       {!isUser && (
         <button
           onClick={handleSaveInsight}
@@ -114,7 +109,6 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
     if (!currentPrompt || isTheiaResponding) return;
 
     const userMessagesCount = messages.filter(m => m.sender === 'user').length;
-    // The condition is correct: this is the 3rd user message being sent.
     const shouldGenerateTitle = userMessagesCount === 2;
 
     const newUserMessage: Message = { id: uuidv4(), sender: 'user', content: currentPrompt };
@@ -133,12 +127,8 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
       if (result.success && result.response) {
         theiaResponse = { id: uuidv4(), sender: 'theia', content: result.response };
         await addMessage(chatId, 'ai', result.response, selectedModel);
-
-        // Include the new AI response for title generation context
         const messagesForTitle = [...updatedMessages, theiaResponse];
-
         if (shouldGenerateTitle) {
-            // MODIFICATION: Pass the complete message list to the function
             const titleResult = await generateAndUpdateChatTitle(chatId, messagesForTitle);
             if (titleResult.success && titleResult.newTitle) {
               window.dispatchEvent(new CustomEvent('chatUpdated', {
@@ -149,7 +139,6 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
               }));
             }
         }
-
       } else {
         theiaResponse = { id: uuidv4(), sender: 'theia', content: `Error: ${result.error || 'Failed to get a response.'}` };
       }
@@ -171,12 +160,11 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
   return (
-    // --- MODIFICATION: Main container for responsive chat layout ---
-    <div className="flex h-full w-full flex-col bg-stone-50/50">
-      {/* --- MODIFICATION: Scrollable message area --- */}
-      <div className="flex-1 overflow-y-auto">
-        {/* --- MODIFICATION: Responsive padding that accounts for the sticky input bar --- */}
-        <div className="max-w-3xl mx-auto px-4 pt-6 pb-24 sm:pt-12 sm:pb-32 space-y-4">
+    <div className="h-full w-full">
+      {/* Scrollable message container */}
+      <div className="h-full overflow-y-auto">
+        {/* --- MODIFICATION: Increased bottom padding to prevent content from hiding under the fixed input bar --- */}
+        <div className="max-w-3xl mx-auto px-4 pt-6 pb-28 sm:pt-12 sm:pb-32 space-y-4">
           {isLoadingMessages ? (
             <div className="flex justify-center pt-10"><Loader2 className="h-8 w-8 text-[#333333] animate-spin" /></div>
           ) : messageError ? (
@@ -216,8 +204,8 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
         </div>
       </div>
 
-      {/* --- MODIFICATION: Sticky Input Area --- */}
-      <div className="flex-shrink-0 sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-stone-200">
+      {/* --- MODIFICATION: Input area is now FIXED to the bottom of the viewport --- */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-stone-200">
         <div className="max-w-3xl mx-auto p-4">
           <div className="flex items-end gap-2 sm:gap-4">
             <textarea
@@ -236,7 +224,6 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
               disabled={!prompt.trim() || isTheiaResponding}
               aria-label="Send"
             >
-              {/* --- MODIFICATION: Responsive button size --- */}
               <div className="relative w-10 h-10 sm:w-12 sm:h-12">
                  <Image src="/cta.png" alt="Send" fill style={{ objectFit: 'contain' }} />
               </div>
