@@ -5,6 +5,7 @@ import { SidebarComponent } from "@/components/sidebar";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect, Suspense } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth";
+// --- MODIFICATION: Removed 'useRouter' from this import ---
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { getSubscriptionDetails } from "@/app/actions";
@@ -31,6 +32,8 @@ const Footer = () => {
 function ClientLayoutContent({ children }: ClientLayoutProps) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
+  // --- MODIFICATION: This unused variable has been removed ---
+  // const router = useRouter(); 
   const [activePlanName, setActivePlanName] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
