@@ -205,7 +205,12 @@ export function SidebarComponent({ isAuthenticated, activePlanName, onClose }: S
         {/* Header */}
         <div className="flex items-center p-4">
           {!isCollapsed && <span className="text-2xl font-bold text-white">Theia</span>}
-          <Button variant="ghost" size="icon" className="rounded-full ml-auto hover:bg-zinc-800 hover:text-zinc-50" onClick={() => setIsCollapsed(!isCollapsed)}>
+          {/* Mobile-only Close Button */}
+          <Button variant="ghost" size="icon" className="rounded-full ml-auto hover:bg-zinc-800 hover:text-zinc-50 md:hidden" onClick={onClose}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          {/* Desktop-only Collapse Button */}
+          <Button variant="ghost" size="icon" className="rounded-full ml-auto hover:bg-zinc-800 hover:text-zinc-50 hidden md:block" onClick={() => setIsCollapsed(!isCollapsed)}>
             <ChevronLeft className={cn("h-4 w-4 transition-transform", isCollapsed && "rotate-180")} />
           </Button>
         </div>

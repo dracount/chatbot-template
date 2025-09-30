@@ -11,7 +11,8 @@ import { getSubscriptionDetails } from "@/app/actions";
 import { CheckoutSuccessHandler } from "@/components/checkout-success-handler";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
-import { Loader2, MenuIcon, XIcon } from "lucide-react";
+import { Loader2, XIcon } from "lucide-react";
+import Image from "next/image";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -104,7 +105,7 @@ function ClientLayoutContent({ children }: ClientLayoutProps) {
               className="md:hidden fixed top-4 left-4 z-40 p-2 bg-background/50 backdrop-blur-sm rounded-md border"
               aria-label="Toggle menu"
             >
-              {isSidebarOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+              {isSidebarOpen ? <XIcon className="h-5 w-5" /> : <Image src="/menu_icon.png" alt="Open menu" width={20} height={20} />}
             </button>
              {children}
           </div>
