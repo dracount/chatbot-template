@@ -11,14 +11,14 @@ export default function PhilosophyPage() {
           <h1 className="font-serif text-4xl md:text-5xl text-foreground leading-tight mb-8 text-center">
             Our Story
           </h1>
-          <div className="prose prose-lg mx-auto text-foreground/80">
-            <p className="lead text-xl">
+          <div className="text-foreground/80 space-y-6">
+            <p className="text-xl">
               The emergence of powerful AI presented a fascinating mirror for the human mind. In its raw potential, we saw an incredible tool for reflection. But a mirror that simply gives you the answers you want to hear isn’t a tool for growth; it’s a cage. True transformation doesn’t come from more information, but from deeper awareness.
             </p>
-            <p>
+            <p className="text-lg">
               Our mission became clear: to meticulously sculpt this raw power into an instrument of self-discovery. We stripped away the noise of generic advice and instilled the patient, grounded principles of master coaching. We didn’t just enhance an AI; we gave it a philosophy.
             </p>
-            <p>
+            <p className="text-lg">
               Theia was created to be the guide we wished we had—a sacred, on-demand space where you can finally access the profound wisdom you already hold within. It’s for those who are ready to stop asking for answers and start listening to themselves.
             </p>
           </div>
