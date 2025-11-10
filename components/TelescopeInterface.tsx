@@ -104,7 +104,7 @@ export const TelescopeInterface = ({ chatId }: ChatInterfaceProps) => {
   const [tutorialStep, setTutorialStep] = useState(0);
 
   const [isFirstSessionEver, setIsFirstSessionEver] = useState(false);
-  const [sessionTypeChecked, setSessionTypeChecked] = useState(false);
+  const [_sessionTypeChecked, setSessionTypeChecked] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);

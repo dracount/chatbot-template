@@ -49,7 +49,7 @@ export function TheMethodPage() {
         {/* Steps Section */}
         <section className="space-y-16 md:space-y-20">
           <MethodologyStep number="01" title="Opening the Space">
-            We begin not with the problem, but with presence. You'll be invited to arrive fully, creating a calm and focused container for your exploration. Here, you define what feels most alive for you to explore.
+            We begin not with the problem, but with presence. You&apos;ll be invited to arrive fully, creating a calm and focused container for your exploration. Here, you define what feels most alive for you to explore.
           </MethodologyStep>
 
           <MethodologyStep number="02" title="Bridging to the Body">

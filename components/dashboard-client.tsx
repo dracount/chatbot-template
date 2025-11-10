@@ -71,7 +71,7 @@ const InsightCard = ({ insight, onRemove }: { insight: InsightItem; onRemove: (i
 
 
 // --- MAIN CLIENT COMPONENT ---
-export function DashboardClient({ initialHistory, initialInsights }: DashboardClientProps) {
+export function DashboardClient({ initialHistory: _initialHistory, initialInsights }: DashboardClientProps) {
   const [insights, setInsights] = useState<InsightItem[]>(initialInsights);
   const [insightToDelete, setInsightToDelete] = useState<InsightItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -103,7 +103,7 @@ export function DashboardClient({ initialHistory, initialInsights }: DashboardCl
       } else {
         toast.success("Insight removed.");
       }
-    } catch (error) {
+    } catch (_error) {
       // Revert on error
       setInsights(originalInsights);
       toast.error("Could not remove insight.");

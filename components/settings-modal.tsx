@@ -147,7 +147,7 @@ export function SettingsModal({ isOpen, setIsOpen, onSettingsChanged }: Settings
       } else {
         onSettingsChanged?.();
       }
-    } catch (error) {
+    } catch (_error) {
        setModelSaveError("An unexpected error occurred while saving enabled models.");
     } finally {
        setIsSavingModels(false);

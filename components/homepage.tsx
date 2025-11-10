@@ -92,7 +92,7 @@ export function Homepage() {
               </div>
               <div className="space-y-12 md:space-y-16">
                   <HowItWorksStep number="01" title="Opening the Space">
-                      We begin not with the problem, but with presence. You'll be invited to arrive fully, creating a calm and focused container for your exploration.
+                      We begin not with the problem, but with presence. You&apos;ll be invited to arrive fully, creating a calm and focused container for your exploration.
                   </HowItWorksStep>
                   <HowItWorksStep number="02" title="Bridging to the Body">
                       As you share, Theia listens. If the conversation remains purely in thought, you will be gently guided to notice where the issue lives in your body. This is the bridge to felt insight.
@@ -109,7 +109,7 @@ export function Homepage() {
         <div className="max-w-3xl mx-auto text-center px-4">
             <h2 className="text-3xl md:text-4xl font-semibold mb-6">Built for the Path Within</h2>
             <p className="text-lg text-foreground/80 mb-8 leading-relaxed italic">
-              "Theia was created to be the guide we wished we had—a space to finally access the profound wisdom we already hold. It’s for those who are ready to stop asking for answers and start listening to themselves."
+              &quot;Theia was created to be the guide we wished we had—a space to finally access the profound wisdom we already hold. It&apos;s for those who are ready to stop asking for answers and start listening to themselves.&quot;
             </p>
             <Link
               href="/philosophy"
