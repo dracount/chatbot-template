@@ -1,9 +1,9 @@
 // D:\PROCESSES\vscode_projects\AI_Lifecoach\chatbot-template\app\config\ai-config.ts
 // --------------------------------------------------------------------------------
 
-export const MODEL_CHAT = 'google/gemini-2.5-pro'; // Model for general chat
+export const MODEL_CHAT = 'google/gemini-3-pro-preview'; // Model for general chat
 //export const MODEL_CHAT = 'deepseek/deepseek-chat-v3.1:free'
-export const MODEL_TITLE = 'google/gemini-2.5-flash'; // Model for generating titles
+export const MODEL_TITLE = 'google/gemini-3-pro-preview'; // Model for generating titles
 //export const MODEL_TITLE = 'deepseek/deepseek-chat-v3.1:free'
 
 
